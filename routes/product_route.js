@@ -1,0 +1,30 @@
+const express = require('express');
+const {getProduct, addProduct, updateProduct, deleteProduct,updateProductQuantity, getProductByCategory, getCategories }= require('../controllers/product_controller');
+const {getProductByName}= require('../controllers/product_controller');
+const router=express.Router();
+
+
+router.get('/getall/:id',getProduct);
+
+//get product by name
+router.get('/get/:id',getProductByName);
+
+//add product
+router.post('/add/:id',addProduct);
+
+//update
+router.put('/update/:id',updateProduct);
+
+//delete
+router.delete('/delete/:id',deleteProduct);
+
+//update quantity
+router.post('/update-quantity', updateProductQuantity);
+
+//get products by category
+router.get('/ProductByCategory/:id',getProductByCategory);
+
+//get categories
+router.get('/categories/:id',getCategories);
+
+module.exports=router;
