@@ -58,7 +58,7 @@ const makeDebtPayment = async (req, res) => {
         // Commit the transaction
         await db.query('COMMIT');
 
-        res.status(200).send({
+        return res.status(200).send({
             success: true,
             message: 'Debt payment successful'
         });

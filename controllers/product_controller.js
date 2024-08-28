@@ -240,7 +240,7 @@ const updateProductQuantity = async (req, res) => {
 const getProductByCategory = async (req, res) => {
     try {
         const userId=req.params.id;
-        const { categoryName } = req.body;
+        const { categoryName } = req.query; 
         console.log(categoryName,userId);
         if (!categoryName || !userId) {
             return res.status(400).send({
