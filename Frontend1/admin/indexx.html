@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+     <!-- Required meta tags -->
+     <meta charset="utf-8" />
+     <meta
+         name="viewport"
+         content="width=device-width, initial-scale=1, shrink-to-fit=no"
+     />
+
+     <!-- Bootstrap CSS v5.2.1 -->
+     <link
+         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+         rel="stylesheet"
+         integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+         crossorigin="anonymous"
+     />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POS Dashboard</title>
+    <link rel="stylesheet" href="index.css">
+
+</head>
+
+<body>
+  <header>
+    <!-- place navbar here -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+          
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+              <li class="nav-item">
+                <a class="nav-link active" aria-current="page" href="allcos.html">ALL CUSTOMER</a>
+              </li>
+              
+              <li class="nav-item">
+                <a class="nav-link" href="indexx.html">Dashboard</a>
+              </li>
+              <li class="nav-item"></li>
+                    <a class="nav-link" href="vender.html">vender</a>
+                  </li>
+                  <li class="nav-item"></li>
+                    <a class="nav-link" href="stock.html">stock</a>
+                  </li>
+                  
+            </ul>
+            <form class="d-flex">
+              <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+              <button class="btn btn-outline-success" type="submit">Search</button>
+            </form>
+            <!-- Logout Button -->
+          <button id="logout-btn" class="btn btn-outline-danger">Logout</button>
+          </div>
+        </div>
+      </nav>
+</header>
+
+
+
+
+
+
+    <div class="container">
+        <!-- Current Sale Section -->
+        <div class="current-sale">
+            <h3>Current Sale</h3>
+            <ul id="sale-items"></ul>
+            <p>Sub-total: <span id="sub-total">$0.00</span></p>
+            <p>Tax (NZ GST): <span id="tax">$0.00</span></p>
+            <p><b>TOTAL: <span id="total">$0.00</span></b></p>
+            <!-- Customer ID Input -->
+            <div class="customer-id">
+                <label for="customer-id-input">Customer ID:</label>
+                <input type="text" id="customer-id-input" placeholder="Enter Customer ID">
+            </div>
+            <!-- Save Receipt Button -->
+            <button id="save-receipt-button">Save & Print Receipt</button>
+        </div>
+
+        <!-- Search Bar -->
+        
+
+        <!-- Categories Section -->
+        <div class="categories">
+            <h3>Categories</h3>
+            <div class="search-bar">
+              <input type="text" id="product-search" placeholder="Search product...">
+          </div>
+            <div class="category-buttons">
+                <button data-category="all">All</button>
+                <button data-category="drinks">Drinks</button>
+                <button data-category="cookies">Cookies</button>
+                <button data-category="pastries">Pastries</button>
+            </div>
+        </div>
+
+        <!-- Products Section -->
+        <div class="products">
+            <h3>Products</h3>
+            <div id="product-list"></div>
+        </div>
+    </div>
+    <script>
+      const products = [
+    // Drinks Category
+    { name: 'Espresso', price: 3.80, category: 'drinks' },
+    { name: 'Long Black', price: 3.80, category: 'drinks' },
+    { name: 'Hot Chocolate', price: 3.80, category: 'drinks' },
+    { name: 'Flat White', price: 4.00, category: 'drinks' },
+    { name: 'Latte', price: 4.50, category: 'drinks' },
+    { name: 'Black Tea', price: 2.50, category: 'drinks' },
+    { name: 'Cappuccino', price: 4.00, category: 'drinks' },
+    { name: 'Chai Latte', price: 4.50, category: 'drinks' },
+    { name: 'Iced Coffee', price: 4.20, category: 'drinks' },
+    
+    // Cookies Category
+    { name: 'Chocolate Chip Cookie', price: 1.50, category: 'cookies' },
+    { name: 'Oatmeal Raisin Cookie', price: 1.60, category: 'cookies' },
+    { name: 'Peanut Butter Cookie', price: 1.70, category: 'cookies' },
+    { name: 'Double Chocolate Cookie', price: 1.80, category: 'cookies' },
+    
+    // Pastries Category
+    { name: 'Croissant', price: 2.50, category: 'pastries' },
+    { name: 'Danish Pastry', price: 2.80, category: 'pastries' },
+    { name: 'Cinnamon Roll', price: 3.00, category: 'pastries' },
+    { name: 'Muffin', price: 2.50, category: 'pastries' },
+    { name: 'Apple Turnover', price: 3.20, category: 'pastries' }
+];
+
+let currentSale = [];
+const taxRate = 0.15;
+
+document.addEventListener('DOMContentLoaded', () => {
+    const productList = document.getElementById('product-list');
+    const saleItems = document.getElementById('sale-items');
+    const subTotalEl = document.getElementById('sub-total');
+    const taxEl = document.getElementById('tax');
+    const totalEl = document.getElementById('total');
+    const searchInput = document.getElementById('product-search');
+    const categoryButtons = document.querySelectorAll('.category-buttons button');
+    const customerIdInput = document.getElementById('customer-id-input');
+    const saveReceiptButton = document.getElementById('save-receipt-button');
+
+    // Function to filter products by category and search term
+    function filterProducts(category, searchTerm = '') {
+        const filteredProducts = products.filter(p => {
+            const isCategoryMatch = category === 'all' || p.category === category;
+            const isSearchMatch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
+            return isCategoryMatch && isSearchMatch;
+        });
+        renderProducts(filteredProducts);
+    }
+
+    // Event listeners for category buttons
+    categoryButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const category = button.getAttribute('data-category');
+            const searchTerm = searchInput.value; // Get search term when category is selected
+            filterProducts(category, searchTerm);
+        });
+    });
+
+    // Search functionality with category filtering
+    searchInput.addEventListener('input', (e) => {
+        const searchTerm = e.target.value;
+        const selectedCategory = document.querySelector('.category-buttons button.active')?.getAttribute('data-category') || 'all';
+        filterProducts(selectedCategory, searchTerm);
+    });
+
+    // Render products dynamically
+    function renderProducts(productArray) {
+        productList.innerHTML = '';
+        productArray.forEach(product => {
+            const productDiv = document.createElement('div');
+            productDiv.classList.add('product-item');
+            productDiv.innerHTML = `
+                <span>${product.name}</span>
+                <button class="product-button" data-name="${product.name}">Add</button>
+            `;
+            productList.appendChild(productDiv);
+        });
+    }
+
+    renderProducts(products);  // Initially render all products
+
+    // Add product to sale with quantity control
+    productList.addEventListener('click', (e) => {
+        if (e.target.classList.contains('product-button')) {
+            const productName = e.target.getAttribute('data-name');
+            const product = products.find(p => p.name === productName);
+            addToSale(product);
+        }
+    });
+
+    // Function to add product to the current sale
+    function addToSale(product) {
+        const existingItem = currentSale.find(item => item.name === product.name);
+        if (existingItem) {
+            existingItem.quantity++;
+        } else {
+            currentSale.push({ ...product, quantity: 1 });
+        }
+        updateSaleUI();
+    }
+
+    // Function to update the sale UI and calculate totals
+    function updateSaleUI() {
+        saleItems.innerHTML = '';
+        let subTotal = 0;
+
+        currentSale.forEach(item => {
+            const li = document.createElement('li');
+            li.innerHTML = `
+                ${item.name} <span>$${(item.price * item.quantity).toFixed(2)}</span>
+                <div class="quantity-controls">
+                    <button class="subtract" data-name="${item.name}">-</button>
+                    <input type="number" value="${item.quantity}" data-name="${item.name}">
+                    <button class="add" data-name="${item.name}">+</button>
+                </div>
+            `;
+            saleItems.appendChild(li);
+            subTotal += item.price * item.quantity;
+        });
+
+        const tax = subTotal * taxRate;
+        const total = subTotal + tax;
+
+        subTotalEl.textContent = `$${subTotal.toFixed(2)}`;
+        taxEl.textContent = `$${tax.toFixed(2)}`;
+        totalEl.textContent = `$${total.toFixed(2)}`;
+    }
+
+    // Add event listeners for quantity control
+    saleItems.addEventListener('click', (e) => {
+        const itemName = e.target.getAttribute('data-name');
+        if (e.target.classList.contains('add')) {
+            const item = currentSale.find(p => p.name === itemName);
+            item.quantity++;
+            updateSaleUI();
+        } else if (e.target.classList.contains('subtract')) {
+            const item = currentSale.find(p => p.name === itemName);
+            if (item.quantity > 1) {
+                item.quantity--;
+            } else {
+                currentSale = currentSale.filter(p => p.name !== itemName);
+            }
+            updateSaleUI();
+        }
+    });
+
+    // Event listener for saving and printing the receipt
+    saveReceiptButton.addEventListener('click', () => {
+        const customerId = customerIdInput.value.trim();
+        if (!customerId) {
+            alert("Please enter a valid Customer ID.");
+            return;
+        }
+
+        // Save and print receipt logic here
+        console.log(`Receipt saved for Customer ID: ${customerId}`);
+        console.log("Current Sale:", currentSale);
+        // Add print logic here (e.g., window.print())
+    });
+});
+
+    </script>
+
+
+  <!-- Bootstrap JS with correct integrity -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" 
+  integrity="sha384-8bnVHoC3Gphq7DBFt2tAR1Yb8cOZhgrxnL+GdGo7bjUjEdiGHsoZoD3O7eKpspki" 
+  crossorigin="anonymous"></script>
+
+<script>
+  // Logout Button Logic
+  document.getElementById('logout-btn').addEventListener('click', function () {
+    // Redirect back to the main index page
+    window.location.href = "../user/index.html";  // Adjust the path if needed
+  });
+</script>
+</body>
+</html>

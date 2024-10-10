@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <title>ALL CUSTOMER</title>
+        <!-- Required meta tags -->
+        <meta charset="utf-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, shrink-to-fit=no"
+        />
+
+        <!-- Bootstrap CSS v5.2.1 -->
+        <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+            integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+            crossorigin="anonymous"
+        />
+    </head>
+
+    <body>
+        <header>
+            <!-- place navbar here -->
+            <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                <div class="container-fluid">
+                  
+                  <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                  </button>
+                  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                      <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="allcos.html">ALL CUSTOMER</a>
+                      </li>
+                     
+                      <li class="nav-item">
+                        <a class="nav-link" href="indexx.html">Dashboard</a>
+                      </li>
+                      <li class="nav-item"></li>
+                    <a class="nav-link" href="vender.html">vender</a>
+                  </li>
+                  <li class="nav-item"></li>
+                    <a class="nav-link" href="stock.html">stock</a>
+                  </li>
+                  
+                    </ul>
+                    <form class="d-flex">
+                      <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+                      <button class="btn btn-outline-success" type="submit">Search</button>
+                    </form>
+                  </div>
+                </div>
+              </nav>
+        </header>
+        <main>
+<!-- 
+<div class="container">
+    <h1 class="text-center" >Company Name</h1>
+    <h2 class="text-center">Costumer Data</h2>
+  <div
+    class="table-responsive"
+  >
+    <table
+        class="table table-bordered text-center"
+    >
+        <thead>
+            <tr>
+                <th scope="col">NAME</th>
+                <th scope="col">zamidar Code </th>
+                <th scope="col">phone Number</th>
+                <th scope="col" colspan="2">Details</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="">
+                <td scope="row">Shah Rabi</td>
+                <td >56</td>
+                <td>03151234567</td>
+                <td><a href="detail.html"><input type="button" value="View Details" class="btn btn-success"></a></td>
+                <td><a href="loan.html"><input type="button" value="LOAN" class="btn btn-success"></a></td>
+            </tr>
+           
+        </tbody>
+    </table>
+  </div> -->
+<!-- </div> -->
+<!-- Main Page (allcos.html) -->
+<div class="container">
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newVendorModal">Add New Vendor</button>
+
+    <!-- Modal -->
+    <div class="modal fade" id="newVendorModal" tabindex="-1" aria-labelledby="newVendorModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="newVendorModalLabel">New Vendor Entry</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="vendorForm">
+                        <div class="mb-3">
+                            <label for="vendorName" class="form-label">Vendor Name</label>
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="vendorName"
+                                placeholder="Enter vendor name"
+                                required
+                            />
+                        </div>
+                        <div class="mb-3">
+                            <label for="vendorPhone" class="form-label">Phone Number</label>
+                            <input
+                                type="tel"
+                                class="form-control"
+                                id="vendorPhone"
+                                placeholder="Enter phone number"
+                                required
+                            />
+                        </div>
+                        <div class="mb-3">
+                            <label for="vendorAddress" class="form-label">Address</label>
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="vendorAddress"
+                                placeholder="Enter address"
+                                required
+                            />
+                        </div>
+                        <div class="mb-3">
+                            <label for="vendorDetails" class="form-label">Additional Details</label>
+                            <textarea
+                                class="form-control"
+                                id="vendorDetails"
+                                rows="3"
+                                placeholder="Enter additional details about the vendor"
+                            ></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="submitVendor()">Add Vendor</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer>
+    <!-- place footer here -->
+</footer>
+
+<!-- Bootstrap JavaScript Libraries -->
+<script
+    src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+    integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
+    crossorigin="anonymous"
+></script>
+
+<script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"
+    integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+"
+    crossorigin="anonymous"
+></script>
+
+<script>
+    function submitVendor() {
+        const name = document.getElementById('vendorName').value;
+        const phone = document.getElementById('vendorPhone').value;
+        const address = document.getElementById('vendorAddress').value;
+        const details = document.getElementById('vendorDetails').value;
+
+        // Here you can handle the form submission, e.g., sending data to a server
+        console.log("Vendor Added:", { name, phone, address, details });
+
+        // Optionally, close the modal after submission
+        const modal = bootstrap.Modal.getInstance(document.getElementById('newVendorModal'));
+        modal.hide();
+
+        // Reset form fields
+        document.getElementById('vendorForm').reset();
+    }
+</script>
+    <h1>VENDOR</h1>
+  <div class="table-responsive">
+      <table class="table table-bordered text-center">
+          <thead>
+              <tr>
+                  <th>NAME</th>
+                  <th>Zamindar Code</th>
+                  <th>Phone Number</th>
+                  <th>DETAIL</th>
+              </tr>
+          </thead>
+          <tbody id="customerTableBody">
+              <!-- Dynamic rows will be injected here by JavaScript -->
+          </tbody>
+      </table>
+  </div>
+</div>
+<script>
+  // Array of customer objects
+const customers = [
+    {
+        id: 1,
+        name: "Shah Rabi",
+        zamindarCode: 56,
+        phoneNumber: "03151234567",
+    },
+    {
+        id: 2,
+        name: "John Doe",
+        zamindarCode: 78,
+        phoneNumber: "01234567890",
+    },
+    // Add more customer objects as needed
+];
+
+// Function to render customers to the table
+function renderCustomers() {
+    const tableBody = document.getElementById("customerTableBody");
+    tableBody.innerHTML = ""; // Clear the existing content
+
+    customers.forEach((customer) => {
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+            <td>${customer.name}</td>
+            <td>${customer.zamindarCode}</td>
+            <td>${customer.phoneNumber}</td>
+            <td><a href="vendordetail.html?id=${customer.id}"><input type="button" value="DETAIL" class="btn btn-info"></a></td>
+        `;
+
+        tableBody.appendChild(row);
+    });
+}
+
+// Call the function to render the customers when the page loads
+renderCustomers();
+
+</script>
+
+        </main>
+        <footer>
+            <!-- place footer here -->
+        </footer>
+        <!-- Bootstrap JavaScript Libraries -->
+        <script
+            src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+            integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
+            crossorigin="anonymous"
+        ></script>
+
+        <script
+            src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"
+            integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+"
+            crossorigin="anonymous"
+        ></script>
+    </body>
+</html>

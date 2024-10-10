@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Record</title>
+
+    <!-- Bootstrap CSS -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    />
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Button to open the modal */
+        .open-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin: 50px auto;
+            display: block;
+        }
+
+        .open-btn:hover {
+            background-color: #0056b3;
+        }
+
+        /* Modal styling */
+        #addStockModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Modal content */
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            width: 500px;
+            max-width: 90%;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        /* Modal header */
+        .modal-header {
+            font-size: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        /* Close button */
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background-color: transparent;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .close-btn:hover {
+            color: #333;
+        }
+
+        /* Form inputs styling */
+        input[type="text"], input[type="number"] {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+        }
+
+        /* Submit button styling */
+        .submit-btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 12px;
+            width: 100%;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            background-color: #218838;
+        }
+
+        /* Disable input for Total Value */
+        #totalValue {
+            background-color: #e9ecef;
+            cursor: not-allowed;
+        }
+        .container {
+            max-width: 900px;
+            margin-top: 20px; /* Provide some space below the navbar */
+        }
+        h1 {
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ccc;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        .btn-print {
+            margin-top: 20px;
+            display: block;
+            width: 100px;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            text-align: center;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .btn-print:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar should be completely outside the content container -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top">
+        <div class="container-fluid">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="allcos.html">ALL CUSTOMER</a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link" href="indexx.html">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="vender.html">Vendor</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="stock.html">Stock</a>
+                    </li>
+                </ul>
+                <form class="d-flex">
+                    <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+                    <button class="btn btn-outline-success" type="submit">Search</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Button to open the modal -->
+    <button class="open-btn" onclick="openModal()">Add New Stock</button>
+
+    <!-- Modal for adding stock -->
+    <div id="addStockModal">
+        <div class="modal-content">
+            <button onclick="closeModal()" class="close-btn">&times;</button>
+            <div class="modal-header">Add Stock</div>
+            <form id="stockForm">
+                <label for="stockName">Stock Name:</label><br>
+                <input type="text" id="stockName" name="stockName" placeholder="Enter stock name" required><br>
+                <label for="stockSymbol">Stock Symbol:</label><br>
+                <input type="text" id="stockSymbol" name="stockSymbol" placeholder="Enter stock symbol" required><br>
+                <label for="quantity">Quantity:</label><br>
+                <input type="number" id="quantity" name="quantity" placeholder="Enter quantity" required><br>
+                <label for="purchasePrice">Purchase Price:</label><br>
+                <input type="number" id="purchasePrice" name="purchasePrice" placeholder="Enter purchase price" required><br>
+                <label for="currentPrice">Current Price:</label><br>
+                <input type="number" id="currentPrice" name="currentPrice" placeholder="Enter current price" required><br>
+                <label for="totalValue">Total Value:</label><br>
+                <input type="text" id="totalValue" name="totalValue" readonly><br>
+                <button type="submit" class="submit-btn">Submit</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <h1>Stock Record</h1>
+        <table id="stockTable">
+            <thead>
+                <tr>
+                    <th>Stock Name</th>
+                    <th>Stock Symbol</th>
+                    <th>Quantity</th>
+                    <th>Purchase Price</th>
+                    <th>Current Price</th>
+                    <th>Total Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Data will be populated by JavaScript -->
+            </tbody>
+        </table>
+
+        <button class="btn-print" onclick="printPage()">Print</button>
+    </div>
+
+    <!-- JS to populate table -->
+    <script>
+        const stockData = [
+            { name: "Apple Inc.", symbol: "AAPL", quantity: 50, purchasePrice: 120, currentPrice: 150 },
+            { name: "Tesla, Inc.", symbol: "TSLA", quantity: 30, purchasePrice: 600, currentPrice: 700 },
+            { name: "Amazon.com, Inc.", symbol: "AMZN", quantity: 10, purchasePrice: 3000, currentPrice: 3200 }
+        ];
+
+        function populateTable() {
+            const tableBody = document.querySelector('#stockTable tbody');
+            stockData.forEach(stock => {
+                const totalValue = stock.quantity * stock.currentPrice;
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${stock.name}</td>
+                    <td>${stock.symbol}</td>
+                    <td>${stock.quantity}</td>
+                    <td>${stock.purchasePrice}</td>
+                    <td>${stock.currentPrice}</td>
+                    <td>${totalValue}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function printPage() {
+            window.print();
+        }
+
+        window.onload = populateTable;
+    </script>
+
+    <!-- Bootstrap JS -->
+    <script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-Zenh87qX5JnK2JlVo7tx/3swK/5ckzx6QpBtZo5smXKp4yOOn7pX96et/PFncZ7n"
+        crossorigin="anonymous"
+    ></script>
+    <script>
+        // Function to open the modal
+        function openModal() {
+            document.getElementById('addStockModal').style.display = 'flex';
+        }
+
+        // Function to close the modal
+        function closeModal() {
+            document.getElementById('addStockModal').style.display = 'none';
+        }
+
+        // Calculate total value dynamically
+        document.getElementById('quantity').addEventListener('input', calculateTotalValue);
+        document.getElementById('currentPrice').addEventListener('input', calculateTotalValue);
+
+        function calculateTotalValue() {
+            const quantity = document.getElementById('quantity').value;
+            const currentPrice = document.getElementById('currentPrice').value;
+            const totalValue = quantity * currentPrice;
+            document.getElementById('totalValue').value = totalValue ? totalValue.toFixed(2) : '';
+        }
+
+        // Handle form submission
+        document.getElementById('stockForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const stockName = document.getElementById('stockName').value;
+            const stockSymbol = document.getElementById('stockSymbol').value;
+            const quantity = document.getElementById('quantity').value;
+            const purchasePrice = document.getElementById('purchasePrice').value;
+            const currentPrice = document.getElementById('currentPrice').value;
+            const totalValue = document.getElementById('totalValue').value;
+
+            console.log('Stock Added:', {
+                stockName,
+                stockSymbol,
+                quantity,
+                purchasePrice,
+                currentPrice,
+                totalValue
+            });
+
+            closeModal();
+        });
+    </script>
+</body>
+</html>

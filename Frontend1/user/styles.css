@@ -1,0 +1,152 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f8f8f8;
+    margin: 0;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+}
+
+.dashboard {
+    display: flex;
+    width: 100%;
+}
+
+.sales-section, .products-section {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.sales-section {
+    flex: 2;
+    margin-right: 20px;
+}
+
+.products-section {
+    flex: 3;
+}
+
+h2 {
+    margin-top: 0;
+}
+
+#customer-name {
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+form {
+    margin-bottom: 20px;
+}
+
+.products-list {
+    border-bottom: 1px solid #eee;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+}
+
+.product-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+}
+
+.product-item span {
+    flex: 1;
+}
+
+.product-item input.quantity {
+    width: 50px;
+    margin-right: 10px;
+    text-align: center;
+}
+
+.product-item button.decrease-btn {
+    background-color: #ff6b6b;
+    border: none;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.total {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+}
+
+.pay-section {
+    text-align: right;
+}
+
+.pay-section button {
+    background-color: #28a745;
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.category-buttons {
+    display: flex;
+    margin-bottom: 20px;
+}
+
+.category-btn {
+    background-color: #e7e7e7;
+    border: none;
+    color: #333;
+    padding: 10px 20px;
+    margin-right: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.category-btn.active {
+    background-color: #007bff;
+    color: white;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 10px;
+}
+
+.grid-item {
+    background-color: #f1f1f1;
+    border: none;
+    padding: 10px;
+    text-align: center;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.grid-item:hover {
+    background-color: #007bff;
+    color: white;
+}
+.categories-search {
+    display: flex;
+    align-items: center;
+  }
+  
+  .product-search {
+    margin-left: 20px;
+  }
+  
+  #productSearch {
+    padding: 5px;
+    margin-right: 10px;
+  }
+  

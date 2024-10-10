@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+     <!-- Required meta tags -->
+     <meta charset="utf-8" />
+     <meta
+         name="viewport"
+         content="width=device-width, initial-scale=1, shrink-to-fit=no"
+     />
+
+     <!-- Bootstrap CSS v5.2.1 -->
+     <link
+         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+         rel="stylesheet"
+         integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+         crossorigin="anonymous"
+     />
+    <title>Edit Loan Details</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        label {
+            font-weight: bold;
+        }
+        input[type="text"], input[type="number"], input[type="tel"] {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .btn-save {
+            background-color: #28a745;
+            color: white;
+        }
+        .btn-cancel {
+            background-color: #dc3545;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Edit Loan Details</h1>
+
+    <form id="edit-loan-form">
+        <label for="year-month">Year/Month:</label>
+        <input type="text" id="year-month" name="year-month" required>
+
+        <label for="loan-amount">Loan Amount:</label>
+        <input type="number" id="loan-amount" name="loan-amount" required>
+
+        <label for="commission">Commission %:</label>
+        <input type="number" id="commission" name="commission" required>
+
+        <label for="total-wet">Total Wet:</label>
+        <input type="number" id="total-wet" name="total-wet" required>
+
+        <label for="total-amount">Total Amount:</label>
+        <input type="number" id="total-amount" name="total-amount" required>
+
+        <label for="total-loan-minize">Total Loan After Minize:</label>
+        <input type="number" id="total-loan-minize" name="total-loan-minize" required>
+
+        <label for="payment-method">Payment Method:</label>
+        <input type="text" id="payment-method" name="payment-method" required>
+
+        <label for="payment-detail">Payment Method Detail:</label>
+        <input type="text" id="payment-detail" name="payment-detail" required>
+
+        <div>
+            <button type="submit" class="btn-save">Save</button>
+            <button type="button" class="btn-cancel" onclick="cancelEdit()">Cancel</button>
+        </div>
+    </form>
+
+    <script>
+        // Example loan data
+        let loanData = {
+            yearMonth: "2001",
+            loanAmount: 225000,
+            commission: 5,
+            totalWet: 1500,
+            totalAmount: 75000,
+            totalLoanAfterMinize: 5132,
+            paymentMethod: "cash",
+            paymentMethodDetail: "Cheque No"
+        };
+
+        // Function to populate form with existing loan data
+        function populateForm() {
+            document.getElementById('year-month').value = loanData.yearMonth;
+            document.getElementById('loan-amount').value = loanData.loanAmount;
+            document.getElementById('commission').value = loanData.commission;
+            document.getElementById('total-wet').value = loanData.totalWet;
+            document.getElementById('total-amount').value = loanData.totalAmount;
+            document.getElementById('total-loan-minize').value = loanData.totalLoanAfterMinize;
+            document.getElementById('payment-method').value = loanData.paymentMethod;
+            document.getElementById('payment-detail').value = loanData.paymentMethodDetail;
+        }
+
+        // Function to save changes
+        document.getElementById('edit-loan-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            // Get values from form
+            const yearMonth = document.getElementById('year-month').value;
+            const loanAmount = document.getElementById('loan-amount').value;
+            const commission = document.getElementById('commission').value;
+            const totalWet = document.getElementById('total-wet').value;
+            const totalAmount = document.getElementById('total-amount').value;
+            const totalLoanMinize = document.getElementById('total-loan-minize').value;
+            const paymentMethod = document.getElementById('payment-method').value;
+            const paymentMethodDetail = document.getElementById('payment-detail').value;
+
+            // Update loan data
+            loanData.yearMonth = yearMonth;
+            loanData.loanAmount = loanAmount;
+            loanData.commission = commission;
+            loanData.totalWet = totalWet;
+            loanData.totalAmount = totalAmount;
+            loanData.totalLoanAfterMinize = totalLoanMinize;
+            loanData.paymentMethod = paymentMethod;
+            loanData.paymentMethodDetail = paymentMethodDetail;
+
+            // Save the updated data (for now just log it to console)
+            console.log('Updated Loan Data:', loanData);
+
+            // Redirect or show a success message
+            alert('Loan details updated successfully!');
+        });
+
+        // Function to cancel the edit and redirect back
+        function cancelEdit() {
+            // Redirect or go back to the previous page
+            alert('Edit cancelled!');
+            // window.history.back(); // Uncomment this line to go back to the previous page
+        }
+
+        // Populate the form when the page loads
+        window.onload = populateForm;
+    </script>
+
+</body>
+</html>
