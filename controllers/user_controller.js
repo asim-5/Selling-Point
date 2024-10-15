@@ -2,9 +2,9 @@ const db = require("../config/db");
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const registerUser = async (req, res) => {
-    const { username, password } = req.body;
+    const { username, password,admin } = req.body;
   
-    if (!username || !password) {
+    if (!username || !password || !admin) {
       return res.status(400).send({
         success: false,
         message: 'Please provide all fields'
@@ -26,11 +26,11 @@ const registerUser = async (req, res) => {
       }
       // Hash the password
       const hashedPassword = await bcrypt.hash(password, 10);
-  
+      const hashedAdmin= await b.bcrypthash(admin, 10);
       // Insert the new user into the database
       const [result] = await db.query(
-        'INSERT INTO users (username, password) VALUES (?, ?)',
-        [username, hashedPassword]
+        'INSERT INTO users (username, password,admin) VALUES (?, ?,?)',
+        [username, hashedPassword,admin]
       );
 
   
@@ -102,4 +102,54 @@ const registerUser = async (req, res) => {
     }
 
   };
-  module.exports={registerUser,loginUser}
+  const checkAdmin= async(req,res)=>{
+    const { userid,password } = req.body;
+
+    if (!password) {
+        return res.status(400).send({
+            success: false,
+            message: 'Please provide all fields'
+        });
+    }
+
+    try {
+        // Check if the user exists
+        console.log(userid);
+        const [users] = await db.query(
+            'SELECT * FROM users WHERE user_id = ?',
+            [userid]
+        );
+
+        if (users.length === 0) {
+            return res.status(401).send({
+                success: false,
+                message: 'Invalid username'
+            });
+        }
+
+        const user = users[0];
+
+        // Compare the provided password with the hashed password in the database
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+
+        if (!isPasswordValid) {
+            return res.status(401).send({
+                success: false,
+                message: 'Invalid password'
+            });
+        }
+        res.status(200).send({
+            success: true,
+            message: 'Login successful',
+
+        });
+    } catch (error) {
+        console.error('Error logging in user:', error);
+        res.status(500).send({
+            success: false,
+            message: 'Internal Server Error'
+        });
+    }
+
+  };
+  module.exports={registerUser,loginUser,checkAdmin}

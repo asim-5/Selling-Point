@@ -204,8 +204,8 @@ const updateCustomer = async (req, res) => {
 
 const getDebtProductsByCustomer = async (req, res) => {
     try {
-        const userId=req.params.id;
-        const { customerId } = req.body;
+        const userId=req.params.userId;
+        const  customerId  = req.params.customerId;
         console.log(customerId,userId);
         if (!customerId || !userId) {
             return res.status(400).send({

@@ -86,7 +86,26 @@
             <div id="product-list"></div>
         </div>
     </div>
-
+    <div class="modal fade" id="passwordModal" tabindex="-1" aria-labelledby="passwordModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="passwordModalLabel">Enter Admin Password</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div class="mb-3">
+                <label for="admin-password" class="form-label">Password</label>
+                <input type="password" class="form-control" id="admin-password" placeholder="Enter your password" required>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              <button type="button" class="btn btn-primary" id="confirm-password-btn">Confirm</button>
+            </div>
+          </div>
+        </div>
+      </div>
     <script>
         const categories = {};
         const billItems = [];
@@ -97,7 +116,7 @@
         if(!token){
             window.location.href = 'login.html';
         }
-    
+        let uid;
         function getUserIdFromToken() {
             // Retrieve the token from local storage
             if (!token) {
@@ -111,7 +130,7 @@
     
             // Extract the user ID (assuming it's stored under 'userId' in the payload)
             const userId = decodedPayload.userId;
-    
+            uid=userId;
             return userId;
         }
     
@@ -332,17 +351,45 @@
             localStorage.removeItem('token');
             window.location.href = 'login.html';
         }
-        document.getElementById('admin-btn').addEventListener('click', function () {
-    // Prompt for password
-    const password = prompt("Enter admin password:");
 
-    // Check if the password is correct
-    if (password === "admin123") {  // Replace with your desired password
-      window.location.href = "../admin/indexx.html";  // Redirect to admin page
-    } else {
-      alert("Incorrect password.");
-    }
-  });
+    document.getElementById('admin-btn').addEventListener('click', async function () 
+    {
+    // Prompt for password
+            const password = prompt("Enter admin password:");
+            
+            // Assuming you have a way to get the user ID, set it here
+            // Prepare the payload to send to the backend
+            const requestBody = {
+                userid: uid,
+                password: password
+            };
+
+            try {
+                // Send the password and userId to the backend for validation
+                const response = await fetch('http://localhost:5000/api/v1/user/admin', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                const data = await response.json();
+
+                // Check if the login was successful
+                if (data.success) {
+                    // Redirect to admin page on success
+                    window.location.href = "../admin/indexx.html";
+                } else {
+                    // Show an error message on failure
+                    alert(data.message || "Incorrect password.");
+                }
+            } catch (error) {
+                console.error("Error logging in admin:", error);
+                alert("An error occurred while trying to log in.");
+            }
+        });
+
     </script>
     
     

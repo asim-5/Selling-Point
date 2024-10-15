@@ -221,8 +221,17 @@
             <form id="customerForm">
                 <label for="name">Customer Name:</label><br>
                 <input type="text" id="name" name="name" placeholder="Enter customer name" required><br>
+                
+                <label for="phno">Customer Phone Number:</label><br>
+                <input type="text" id="phno" name="phno" placeholder="Enter customer phone number" required><br>
+                
                 <label for="email">Customer Email:</label><br>
                 <input type="email" id="email" name="email" placeholder="Enter customer email" required><br>
+                
+                <label for="address">Customer Address:</label><br>
+                <input type="text" id="address" name="address" placeholder="Enter customer address" required><br>
+                
+
                 <button type="submit" class="submit-btn">Submit</button>
             </form>
         </div>
@@ -249,9 +258,29 @@
   </div>
 </div>
 <script>
+        const token = localStorage.getItem('token'); 
+        if(!token){
+            window.location.href = 'login.html';
+        }
+        function getUserIdFromToken() {
+            // Retrieve the token from local storage
+            if (!token) {
+                console.error('No token found in local storage');
+                return null;
+            }
+    
+            // Decode the token
+            const payload = token.split('.')[1];
+            const decodedPayload = JSON.parse(atob(payload));
+    
+            // Extract the user ID (assuming it's stored under 'userId' in the payload)
+            const userId = decodedPayload.userId;
+    
+            return userId;
+        }
 
 document.addEventListener('DOMContentLoaded', () => {
-            const userId = 1; // Replace with the actual user ID
+            const userId = getUserIdFromToken(); 
             getCustomersList(userId);
         });
   // Array of customer objects
@@ -328,10 +357,67 @@ renderCustomers();
         document.getElementById('customerForm').addEventListener('submit', function(event) {
             event.preventDefault();
             const name = document.getElementById('name').value;
+            const phone = document.getElementById('phno').value;
             const email = document.getElementById('email').value;
-            console.log('Customer Added:', name, email);
+            const address = document.getElementById('address').value;
+            const last_update = new Date().toISOString().split('T')[0];;
+            addNewCustomer(name,phone,email,address,last_update)
             closeModal();
         });
+
+        async function addNewCustomer(name,phone,email,address,last_update) {
+
+    // Make sure all fields are filled in
+    if (!name || !phone || !email || !address) {
+        alert("Please fill in all fields!");
+        return;
+    }
+
+    // Create the body object
+    const customerData = {
+        name,
+        phone,
+        email,
+        address,
+        last_update
+    };
+
+
+    const userId = getUserIdFromToken(); // Function that decodes token and extracts userId (already in your code)
+
+    try {
+        // Define the API endpoint (replace 'localhost' with your actual server address)
+        console.log("hello");
+        const apiUrl = `http://localhost:5000/api/v1/customer/add/${userId}`;
+
+        // Make the POST request
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}` // Assuming you need to send the token for authentication
+            },
+            body: JSON.stringify(customerData)
+        });
+
+        const result = await response.json();
+
+        // Check if the customer was successfully added
+        if (result.success) {
+            alert('Customer added successfully');
+            // Optionally, redirect to another page or refresh the customer list
+        } else {
+            console.error(result.message);
+            alert('Failed to add customer: ' + result.message);
+        }
+
+    } catch (error) {
+        console.error("Error while adding customer:", error);
+        alert('An error occurred while adding the customer.');
+    }
+}
+
+
 </script>
 
         </main>

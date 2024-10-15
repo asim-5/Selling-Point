@@ -121,18 +121,21 @@
     </div>
   </nav>
 </header>
-    <h1>Company Name</h1>
     <h2>Customer Data</h2>
 
     <div>
+        <p style="font-weight: bold; font-size: 16px; color: #333; display: flex; align-items: center; gap: 5px; ">
+            Last Updated: <span id="last_update" style="font-weight: normal; color: #007bff;"></span>
+        </p>
         <table>
             <thead>
                 <tr>
                     <th>Name</th>
                     <th>id</th>
                     <th>Phone Number</th>
-                    <th>Total Loan</th>
-                    <th>Current Bill</th>
+                    <th>Email</th>
+                    <th>Address</th>
+                    <th>Amount due</th>
                 </tr>
             </thead>
             <tbody id="customer-info">
@@ -146,14 +149,10 @@
         <table>
             <thead>
                 <tr>
-                    <th>Year/Month</th>
-                    <th>Loan</th>
-                    <th>Commission%</th>
-                    <th>Total Wet</th>
+                    <th>Product Name</th>
+                    <th>Purchase date</th>
+                    <th>quantity</th>
                     <th>Total Amount</th>
-                    <th>product name</th>
-                    <th>Payment Method</th>
-                    
                     <th>print</th>
                     
                 </tr>
@@ -165,65 +164,172 @@
     </div>
 
     <script>
-        // Data stored in arrays
-        const customerData = {
-            name: "Shah Rabi",
-            id: "56",
-            phoneNumber: "03151234567",
-            totalLoan: 2225000
-        };
-
-        const loanData = [
-            {
-                yearMonth: "2001",
-                loan: 225000,
-                commission: 5,
-                totalWet: 1500,
-                totalAmount: 75000,
-                productname: "drubkin",
-                paymentMethod: "cash",
-                paymentMethodDetail: "Cheque No"
+    const token = localStorage.getItem('token'); 
+        if(!token){
+            window.location.href = 'login.html';
+        }
+        function getUserIdFromToken() {
+            // Retrieve the token from local storage
+            if (!token) {
+                console.error('No token found in local storage');
+                return null;
             }
-        ];
+    
+            // Decode the token
+            const payload = token.split('.')[1];
+            const decodedPayload = JSON.parse(atob(payload));
+    
+            // Extract the user ID (assuming it's stored under 'userId' in the payload)
+            const userId = decodedPayload.userId;
+    
+            return userId;
+        }
 
-        // Populate customer info
-        const customerInfo = document.getElementById("customer-info");
-        customerInfo.innerHTML = `
-            <tr>
-                <td>${customerData.name}</td>
-                <td>${customerData.id}</td>
-                <td>${customerData.phoneNumber}</td>
-                <td>${customerData.totalLoan}</td>
-                <td><button class="btn btn-edit" id='insert'>INSERT</button></td>
-                
-            </tr>
+let customers = [];
+
+        async function getCustomersList(userId) {
+            try {
+                // Define the API endpoint
+                const apiUrl = `http://localhost:5000/api/v1/customer/getall/${userId}`;
+
+                // Make the GET request to fetch customer data
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+
+                // Check if the request was successful
+                if (data.success) {
+                    // Populate the global customer list with the fetched data
+                    customers = data.data.map(customer => {
+                        return {
+                            id: customer.customer_id,
+                            name: customer.name,
+                            email: customer.email,
+                            phone: customer.phone,
+                            address: customer.address,
+                            debt: customer.total_debt,
+                            update: customer.last_update
+                        };
+                    });
+
+                    console.log("Customer List:", customers);
+                    renderCustomerDetails(); // Call renderCustomers after data is fetched
+                } else {
+                    console.error(data.message);
+                    customers = []; // Reset to an empty list if no data
+                }
+            } catch (error) {
+                console.error("Error fetching customer data:", error);
+                customers = []; // Reset to an empty list in case of error
+            }
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            const userId = getUserIdFromToken();
+            getCustomersList(userId);
+        });
+
+// Function to get query parameters
+function getQueryParam(param) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(param);
+}
+
+// Function to render customer details
+function renderCustomerDetails() {
+    const customerId = getQueryParam('id');
+    const customer = customers.find(cust => cust.id == customerId);
+
+    if (customer) {
+        const detailsDiv = document.getElementById('customer-info');
+        detailsDiv.innerHTML = `
+            <td> ${customer.name}</td>
+            <td>${customer.id}</td>
+            <td>${customer.phone}</td>
+            <td>${customer.email}</td>
+            <td>${customer.address}</td>
+            <td>${customer.debt}</td>
         `;
-        document.getElementById('insert').addEventListener('click', function() {
-        window.location.href = 'insert.html';
-    });
 
-        // Populate loan data
+        const update=document.getElementById("last_update");
+        const formattedDate = new Date(customer.update).toLocaleDateString();
+        update.innerHTML=`
+        <p style="    margin-bottom: 0;">${formattedDate}</p>
+        `;
+    } else {
+        document.getElementById('customerDetails').innerHTML = '<p>Customer not found.</p>';
+    }
+}
+        // Populate customer info
+    //     const customerInfo = document.getElementById("customer-info");
+    //     customerInfo.innerHTML = `
+    //         <tr>
+    //             <td>${customerData.name}</td>
+    //             <td>${customerData.id}</td>
+    //             <td>${customerData.phoneNumber}</td>
+    //             <td>${customerData.totalLoan}</td>
+    //             <td><button class="btn btn-edit" id='insert'>INSERT</button></td>
+                
+    //         </tr>
+    //     `;
+    //     document.getElementById('insert').addEventListener('click', function() {
+    //     window.location.href = 'insert.html';
+    // });
+
+    let debtProducts = [];
+
+    async function fetchDebtProducts(userId, customerId) {
+        try {
+            const apiUrl = `http://localhost:5000/api/v1/customer/debt_history/${userId}/${customerId}`;
+            const response = await fetch(apiUrl, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                debtProducts = data.data.map(product => ({
+                    purchaseId: product.purchase_id,
+                    productId: product.product_id,
+                    name: product.name,
+                    purchaseDate: new Date(product.purchase_date).toLocaleDateString(),
+                    quantity: product.quantity,
+                    totalPrice: product.total_price,
+                }));
+                renderDebtProducts();
+            } else {
+                console.error(data.message);
+                debtProducts = [];
+            }
+        } catch (error) {
+            console.error("Error fetching debt products:", error);
+            debtProducts = [];
+        }
+    }
+
+    function renderDebtProducts() {
         const loanInfo = document.getElementById("loan-info");
-        loanData.forEach((loan, index) => {
+        loanInfo.innerHTML = ''; // Clear before rendering
+        debtProducts.forEach(product => {
             loanInfo.innerHTML += `
                 <tr>
-                    <td>${loan.yearMonth}</td>
-                    <td>${loan.loan}</td>
-                    <td>${loan.commission}%</td>
-                    <td>${loan.totalWet}</td>
-                    <td>${loan.totalAmount}</td>
-                    <td>${loan.productname}</td>
-                    <td>${loan.paymentMethod} - ${loan.paymentMethodDetail}</td>
-                    
+                    <td>${product.name}</td>
+                    <td>${product.purchaseDate}</td>
+                    <td>${product.quantity}</td>
+                    <td>${product.totalPrice}</td>
                     <td><button class="btn-print" onclick="printPage()">Print</button></td>
-                    
-                    
                 </tr>
             `;
         });
-        document.getElementById('editButton').addEventListener('click', function() {
-        window.location.href = 'edit.html';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const userId = getUserIdFromToken(); 
+        const customerId = getQueryParam('id'); 
+        console.log(customerId);
+        fetchDebtProducts(userId, customerId);
     });
+
+        // Populate loan data
+      
     
 
     // Function to print the page

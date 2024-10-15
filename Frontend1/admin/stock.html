@@ -57,6 +57,8 @@
             border-radius: 8px;
             width: 500px;
             max-width: 90%;
+            max-height: 80%;
+            overflow-y: auto; /* Allow scrolling */
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             position: relative;
         }
@@ -86,7 +88,7 @@
         }
 
         /* Form inputs styling */
-        input[type="text"], input[type="number"] {
+        input[type="text"], input[type="number"], textarea {
             width: calc(100% - 20px);
             padding: 10px;
             margin: 10px 0;
@@ -117,28 +119,35 @@
             background-color: #e9ecef;
             cursor: not-allowed;
         }
+
         .container {
             max-width: 900px;
             margin-top: 20px; /* Provide some space below the navbar */
         }
+
         h1 {
             text-align: center;
         }
+
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
         }
+
         table, th, td {
             border: 1px solid #ccc;
         }
+
         th, td {
             padding: 10px;
             text-align: left;
         }
+
         th {
             background-color: #f4f4f4;
         }
+
         .btn-print {
             margin-top: 20px;
             display: block;
@@ -154,6 +163,7 @@
             margin-left: auto;
             margin-right: auto;
         }
+
         .btn-print:hover {
             background-color: #45a049;
         }
@@ -199,19 +209,44 @@
             <button onclick="closeModal()" class="close-btn">&times;</button>
             <div class="modal-header">Add Stock</div>
             <form id="stockForm">
-                <label for="stockName">Stock Name:</label><br>
-                <input type="text" id="stockName" name="stockName" placeholder="Enter stock name" required><br>
-                <label for="stockSymbol">Stock Symbol:</label><br>
-                <input type="text" id="stockSymbol" name="stockSymbol" placeholder="Enter stock symbol" required><br>
-                <label for="quantity">Quantity:</label><br>
-                <input type="number" id="quantity" name="quantity" placeholder="Enter quantity" required><br>
-                <label for="purchasePrice">Purchase Price:</label><br>
-                <input type="number" id="purchasePrice" name="purchasePrice" placeholder="Enter purchase price" required><br>
-                <label for="currentPrice">Current Price:</label><br>
-                <input type="number" id="currentPrice" name="currentPrice" placeholder="Enter current price" required><br>
-                <label for="totalValue">Total Value:</label><br>
-                <input type="text" id="totalValue" name="totalValue" readonly><br>
-                <button type="submit" class="submit-btn">Submit</button>
+                <!-- Name -->
+                <label for="productName">Name</label><br>
+                <input type="text" id="productName" name="productName" placeholder="Enter product name" required><br>
+
+                <!-- Price -->
+                <label for="price">Price</label><br>
+                <input type="number" id="price" name="price" placeholder="Enter price" min="0" step="0.01" required><br>
+
+                <!-- Description -->
+                <label for="description">Description</label><br>
+                <textarea id="description" name="description" placeholder="Enter product description" rows="4" required></textarea><br>
+
+                <!-- Vendor -->
+                <label for="vendor">Vendor</label><br>
+                <input type="text" id="vendor" name="vendor" placeholder="Enter vendor name" required><br>
+
+                <!-- Quantity -->
+                <label for="quantity">Quantity</label><br>
+                <input type="number" id="quantity" name="quantity" placeholder="Enter quantity" min="1" step="1" required><br>
+
+                <!-- Category -->
+                <label for="category">Category</label><br>
+                <input type="text" id="category" name="category" placeholder="Enter category" required><br>
+
+                <!-- Arrival Date -->
+                <label for="arrivalDate">Arrival Date</label><br>
+                <input type="date" id="arrivalDate" name="arrivalDate" required><br>
+
+                <!-- Selling Date -->
+                <label for="sellingDate">Selling Date</label><br>
+                <input type="date" id="sellingDate" name="sellingDate"><br>
+
+                <!-- Cost -->
+                <label for="cost">Cost</label><br>
+                <input type="number" id="cost" name="cost" placeholder="Enter cost" min="0" step="0.01" required><br>
+
+                <!-- Submit Button -->
+                <input type="submit" value="Add" class="submit-btn">
             </form>
         </div>
     </div>
@@ -222,12 +257,11 @@
         <table id="stockTable">
             <thead>
                 <tr>
-                    <th>Stock Name</th>
-                    <th>Stock Symbol</th>
+                    <th>Name</th>
                     <th>Quantity</th>
-                    <th>Purchase Price</th>
-                    <th>Current Price</th>
-                    <th>Total Value</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Description</th>
                 </tr>
             </thead>
             <tbody>
@@ -240,85 +274,144 @@
 
     <!-- JS to populate table -->
     <script>
-        const stockData = [
-            { name: "Apple Inc.", symbol: "AAPL", quantity: 50, purchasePrice: 120, currentPrice: 150 },
-            { name: "Tesla, Inc.", symbol: "TSLA", quantity: 30, purchasePrice: 600, currentPrice: 700 },
-            { name: "Amazon.com, Inc.", symbol: "AMZN", quantity: 10, purchasePrice: 3000, currentPrice: 3200 }
-        ];
+       const token = localStorage.getItem('token'); 
+        if(!token){
+            window.location.href = 'login.html';
+        }
+    
+        function getUserIdFromToken() {
+            // Retrieve the token from local storage
+            if (!token) {
+                console.error('No token found in local storage');
+                return null;
+            }
+    
+            // Decode the token
+            const payload = token.split('.')[1];
+            const decodedPayload = JSON.parse(atob(payload));
+    
+            // Extract the user ID (assuming it's stored under 'userId' in the payload)
+            const userId = decodedPayload.userId;
+    
+            return userId;
+        }
+        
+        async function fetchProducts(userId) {
+            try {
+                const response = await fetch(`http://localhost:5000/api/v1/product/getall/${userId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
 
-        function populateTable() {
+                const result = await response.json();
+
+                if (result.success) {
+                    populateTable(result.data); // Populate table with products
+                } else {
+                    console.error(result.message);
+                }
+            } catch (error) {
+                console.error('Error fetching products:', error);
+            }
+        }
+
+        // Function to populate the table with products data
+        function populateTable(products) {
             const tableBody = document.querySelector('#stockTable tbody');
-            stockData.forEach(stock => {
-                const totalValue = stock.quantity * stock.currentPrice;
+            tableBody.innerHTML = ''; // Clear previous table data
+
+            products.forEach(product => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${stock.name}</td>
-                    <td>${stock.symbol}</td>
-                    <td>${stock.quantity}</td>
-                    <td>${stock.purchasePrice}</td>
-                    <td>${stock.currentPrice}</td>
-                    <td>${totalValue}</td>
+                    <td>${product.name}</td>
+                    <td>${product.quantity}</td>
+                    <td>${product.category}</td>
+                    <td>${product.price}</td>
+                    <td>${product.description}</td>
                 `;
                 tableBody.appendChild(row);
             });
         }
 
+        // Print the page
         function printPage() {
             window.print();
         }
 
-        window.onload = populateTable;
+        // Call the fetchProducts function with the correct user ID when the page loads
+        const userId = getUserIdFromToken(); // Replace with actual user ID
+        window.onload = () => fetchProducts(userId);
+    
+        // Function to open modal
+        function openModal() {
+            document.getElementById('addStockModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden'; // Disable scrolling on body when modal is open
+        }
+
+        // Function to close modal
+        function closeModal() {
+            document.getElementById('addStockModal').style.display = 'none';
+            document.body.style.overflow = 'auto'; // Re-enable body scrolling
+        }
+
+        // Event listener for form submission
+        document.getElementById('stockForm').addEventListener('submit', async function(event) {
+            event.preventDefault(); // Prevent the default form submission
+        
+        // Gather data from the form
+        const productData = {
+            name: document.getElementById('productName').value,
+            price: document.getElementById('price').value,
+            description: document.getElementById('description').value,
+            vendor: document.getElementById('vendor').value,
+            quantity: document.getElementById('quantity').value,
+            category: document.getElementById('category').value,
+            arrival_date: document.getElementById('arrivalDate').value,
+            selling_date: document.getElementById('sellingDate').value,
+            cost: document.getElementById('cost').value,
+        };
+
+        // Get the userId from local storage
+        const userId = getUserIdFromToken();
+
+        try {
+            // Send POST request to add the product
+            const response = await fetch(`http://localhost:5000/api/v1/product/add/${userId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(productData),
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // Close the modal
+                closeModal();
+
+                // Optionally, refresh the table or show a success message
+                alert('Product added successfully!');
+                // Refresh the stock table if necessary
+                fetchProducts(userId); // Fetch updated products
+            } else {
+                alert(result.message); // Show error message from server
+            }
+        } catch (error) {
+            console.error('Error adding product:', error);
+            alert('There was an error adding the product. Please try again later.');
+        }
+        });
+
+        // Function to print the page
+        function printPage() {
+            window.print();
+        }
     </script>
 
     <!-- Bootstrap JS -->
-    <script
-        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-Zenh87qX5JnK2JlVo7tx/3swK/5ckzx6QpBtZo5smXKp4yOOn7pX96et/PFncZ7n"
-        crossorigin="anonymous"
-    ></script>
-    <script>
-        // Function to open the modal
-        function openModal() {
-            document.getElementById('addStockModal').style.display = 'flex';
-        }
-
-        // Function to close the modal
-        function closeModal() {
-            document.getElementById('addStockModal').style.display = 'none';
-        }
-
-        // Calculate total value dynamically
-        document.getElementById('quantity').addEventListener('input', calculateTotalValue);
-        document.getElementById('currentPrice').addEventListener('input', calculateTotalValue);
-
-        function calculateTotalValue() {
-            const quantity = document.getElementById('quantity').value;
-            const currentPrice = document.getElementById('currentPrice').value;
-            const totalValue = quantity * currentPrice;
-            document.getElementById('totalValue').value = totalValue ? totalValue.toFixed(2) : '';
-        }
-
-        // Handle form submission
-        document.getElementById('stockForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const stockName = document.getElementById('stockName').value;
-            const stockSymbol = document.getElementById('stockSymbol').value;
-            const quantity = document.getElementById('quantity').value;
-            const purchasePrice = document.getElementById('purchasePrice').value;
-            const currentPrice = document.getElementById('currentPrice').value;
-            const totalValue = document.getElementById('totalValue').value;
-
-            console.log('Stock Added:', {
-                stockName,
-                stockSymbol,
-                quantity,
-                purchasePrice,
-                currentPrice,
-                totalValue
-            });
-
-            closeModal();
-        });
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
