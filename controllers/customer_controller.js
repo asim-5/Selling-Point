@@ -21,13 +21,11 @@ const getCustomers= async (req,res) => {
         }
         );
     }catch(error){
-
         console.log(error)
         res.status(500).send({
             success: false,
             message: 'Error in get all customer api'
         })
-
     }
 
 };
@@ -152,7 +150,7 @@ const updateCustomer = async (req, res) => {
     try {
         const userId = req.params.id; // Assuming userId is passed as a URL parameter
         const {customer_id, name, phone, email, address, total_debt, last_update } = req.body; // Destructuring req.body
-        console.log(product_id)
+   
         if(!name || !phone || !email|| !address||!total_debt|| !last_update){
             // console.log(name, price, description, vendor, quantity, category, arrival_date, selling_date,cost);
             res.status(500).send({
@@ -161,12 +159,7 @@ const updateCustomer = async (req, res) => {
             })
 
         }
-        if (!product_id) {
-            return res.status(500).send({
-                success: false,
-                message: 'Invalid product ID'
-            });
-        }
+    
 
         if (!userId) {
             return res.status(500).send({
@@ -215,7 +208,7 @@ const getDebtProductsByCustomer = async (req, res) => {
         }
 
         const query = `
-            SELECT pur.purchase_id,p.product_id,p.name,pur.purchase_date,pur.quantity,pur.total_price
+            SELECT pur.purchase_id,p.product_id,p.name,pur.purchase_date,pur.quantity,pur.total_price,pur.payment_status
             FROM products p
             JOIN purchases pur ON p.product_id = pur.product_id
             JOIN customers c ON pur.customer_id = c.customer_id

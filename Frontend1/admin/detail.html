@@ -4,7 +4,7 @@
     <title>ALL CUSTOMER</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    
+
     <!-- Bootstrap CSS v5.2.1 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous" />
 
@@ -139,11 +139,9 @@
             console.error('No token found in local storage');
             return null;
         }
-
         const payload = token.split('.')[1];
         const decodedPayload = JSON.parse(atob(payload));
-        const userId = decodedPayload.userId;
-        return userId;
+        return decodedPayload.userId;
     }
 
     // Function to get query parameter by name
@@ -171,7 +169,6 @@
                     debt: customer.total_debt,
                     update: customer.last_update
                 }));
-
                 renderCustomerDetails(); // Call renderCustomerDetails after data is fetched
             } else {
                 console.error(data.message);
@@ -181,9 +178,10 @@
         }
     }
 
+    const customerId = getQueryParam('id');
+    
     // Function to render customer details
     function renderCustomerDetails() {
-        const customerId = getQueryParam('id');
         const customer = customers.find(cust => cust.id == customerId);
         const detailsDiv = document.getElementById('customer-info');
 
@@ -199,12 +197,10 @@
                     <td><button class="btn btn-edit" id="insert">INSERT</button></td>
                 </tr>
             `;
-
-            const update = document.getElementById("last_update");
-            if (update) {
-                const formattedDate = new Date(customer.update).toLocaleDateString();
-                update.innerHTML = `<p style="margin-bottom: 0;">${formattedDate}</p>`;
-            }
+            document.getElementById('insert').addEventListener('click', function() {
+                localStorage.setItem('selectedCustomer', JSON.stringify(customer)); // Store the customer object
+                window.location.href = 'insert.html';
+            });
         } else {
             console.error('Customer not found or customer-info element is missing.');
         }
@@ -216,10 +212,7 @@
     async function fetchDebtProducts(userId, customerId) {
         try {
             const apiUrl = `http://localhost:5000/api/v1/customer/debt_history/${userId}/${customerId}`;
-            const response = await fetch(apiUrl, {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' }
-            });
+            const response = await fetch(apiUrl);
             const data = await response.json();
 
             if (data.success) {
@@ -229,7 +222,8 @@
                     name: product.name,
                     purchaseDate: new Date(product.purchase_date).toLocaleDateString(),
                     quantity: product.quantity,
-                    totalPrice: product.total_price
+                    totalPrice: product.total_price,
+                    payment: product.payment_status
                 }));
                 renderDebtProducts();
             } else {
@@ -251,7 +245,8 @@
                     <td>${product.purchaseDate}</td>
                     <td>${product.quantity}</td>
                     <td>${product.totalPrice}</td>
-                    <td><button class="btn btn-edit" onclick="editProduct(${product.purchaseId})">EDIT</button></td>
+                     <td>${product.payment}</td>
+                    <td><button class="btn btn-edit" onclick="editProduct('${encodeURIComponent(JSON.stringify(product))}')">EDIT</button></td>
                     <td><button class="btn-print" onclick="printPage()">Print</button></td>
                     <td><button class="btn btn-print" onclick="deleteProduct(${product.purchaseId})">DELETE</button></td>
                 </tr>
@@ -264,9 +259,10 @@
         window.print();
     }
 
-    // Function to edit product (placeholder)
-    function editProduct(purchaseId) {
-        window.location.href = `edit.html?purchaseId=${purchaseId}`;
+    // Function to edit product
+    function editProduct(product) {
+        cosole.log(product.payment_status);
+        window.location.href = `edit.html?product=${product}`;
     }
 
     // Function to delete product (placeholder)
@@ -277,10 +273,10 @@
     // Load customer data and debt products on page load
     document.addEventListener('DOMContentLoaded', () => {
         const userId = getUserIdFromToken();
-        getCustomersList(userId);
-
-        const customerId = getQueryParam('id');
-        fetchDebtProducts(userId, customerId);
+        if (userId) {
+            getCustomersList(userId);
+            fetchDebtProducts(userId, customerId);
+        }
     });
 </script>
 

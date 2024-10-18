@@ -293,6 +293,7 @@ function renderCustomerDetails() {
                     purchaseDate: new Date(product.purchase_date).toLocaleDateString(),
                     quantity: product.quantity,
                     totalPrice: product.total_price,
+                    payment_status: product.payment_status
                 }));
                 renderDebtProducts();
             } else {
