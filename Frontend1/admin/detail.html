@@ -223,7 +223,8 @@
                     purchaseDate: new Date(product.purchase_date).toLocaleDateString(),
                     quantity: product.quantity,
                     totalPrice: product.total_price,
-                    payment: product.payment_status
+                    payment: product.payment_status,
+                    customer_Id: customerId,
                 }));
                 renderDebtProducts();
             } else {
@@ -234,7 +235,7 @@
         }
     }
 
-    // Function to render debt products
+    // Function to render debt products        ${console.log(product.purchaseId,product.customer_Id,product.productId)}
     function renderDebtProducts() {
         const loanInfo = document.getElementById("loan-info");
         loanInfo.innerHTML = ''; // Clear before rendering
@@ -246,6 +247,7 @@
                     <td>${product.quantity}</td>
                     <td>${product.totalPrice}</td>
                      <td>${product.payment}</td>
+              
                     <td><button class="btn btn-edit" onclick="editProduct('${encodeURIComponent(JSON.stringify(product))}')">EDIT</button></td>
                     <td><button class="btn-print" onclick="printPage()">Print</button></td>
                     <td><button class="btn btn-print" onclick="deleteProduct(${product.purchaseId})">DELETE</button></td>
@@ -261,8 +263,8 @@
 
     // Function to edit product
     function editProduct(product) {
-        cosole.log(product.payment_status);
-        window.location.href = `edit.html?product=${product}`;
+        //console.log(product.purchase_id,product.name,product.product_id);
+       window.location.href = `edit.html?product=${product}`;
     }
 
     // Function to delete product (placeholder)

@@ -304,5 +304,115 @@ const getCategories = async (req, res) => {
     }
 };
 
+// Update purchase and adjust total_debt in customers table
+const updateDebtPurchaseProducts = async (req, res) => {
+    const connection = await db.getConnection(); // Start a transaction
+    try {
+        await connection.beginTransaction();
 
-module.exports={getProduct,getProductByName,addProduct,updateProduct,deleteProduct,updateProductQuantity,getProductByCategory,getCategories };
+        const { purchase_id, customer_id, user_id } = req.params; // Non-editable fields from params
+        const { purchase_date, quantity, total_price, payment_status } = req.body; // Editable fields
+        
+        // Fetch the current purchase details
+        const [currentPurchase] = await connection.query(
+            'SELECT total_price, payment_status FROM purchases WHERE purchase_id = ? AND customer_id = ? AND user_id = ?',
+            [purchase_id, customer_id, user_id]
+        );
+
+        if (!currentPurchase) {
+            await connection.rollback();
+            return res.status(404).send({
+                success: false,
+                message: 'Purchase not found'
+            });
+        }
+        const oldTotalPrice = currentPurchase[0].total_price;
+        const oldPaymentStatus = currentPurchase[0].payment_status;
+        // Fetch the customer's total_debt
+        const [customer] = await connection.query(
+            'SELECT total_debt FROM customers WHERE customer_id = ?',
+            [customer_id]
+        );
+
+        if (!customer) {
+            await connection.rollback();
+            return res.status(404).send({
+                success: false,
+                message: 'Customer not found'
+            });
+        }
+       
+        const customerTotalDebt = customer[0].total_debt;
+      //  console.log(total_price,customerTotalDebt);
+        // If payment_status changes from 0 to 1, check if total_price is greater than total_debt
+        if (oldPaymentStatus === 0 && payment_status === 1 && total_price > customerTotalDebt) {
+            await connection.rollback(); // Roll back the transaction if the condition fails
+            return res.status(400).send({
+                success: false,
+                message: 'Price greater than debt, cannot change payment status'
+            });
+        }
+
+        // Update the purchase fields
+        const updateQuery = `
+            UPDATE purchases 
+            SET purchase_date = ?, quantity = ?, total_price = ?, payment_status = ? 
+            WHERE purchase_id = ? AND customer_id = ? AND user_id = ?
+        `;
+        await connection.query(updateQuery, [purchase_date, quantity, total_price, payment_status, purchase_id, customer_id, user_id]);
+
+        // If total_price is changed, update the customer's total_debt
+      //  console.log(total_price,oldTotalPrice);
+        if (total_price > oldTotalPrice) {
+
+            const priceDifference = total_price - oldTotalPrice;
+            await connection.query(
+                'UPDATE customers SET total_debt = total_debt + ? WHERE customer_id = ?',
+                [priceDifference, customer_id]
+            );
+        }
+        if (total_price < oldTotalPrice) {
+
+            const priceDifference = oldTotalPrice - total_price ;
+            await connection.query(
+                'UPDATE customers SET total_debt = total_debt - ? WHERE customer_id = ?',
+                [priceDifference, customer_id]
+            );
+        }
+
+
+        // If payment_status changes from 0 to 1, subtract total_price from total_debt
+        console.log("sss");
+        console.log(oldPaymentStatus,payment_status);
+        console.log(oldPaymentStatus == 0 && payment_status == 1);
+        // console.log(oldPaymentStatus,payment_status,total_price,customer_id);
+        if (oldPaymentStatus == 0 && payment_status == 1) {
+            console.log("hello1");
+            await connection.query(
+                'UPDATE customers SET total_debt = total_debt - ? WHERE customer_id = ?',
+                [total_price, customer_id]
+            );
+        }
+
+        await connection.commit(); // Commit the transaction if everything is successful
+
+        res.status(200).send({
+            success: true,
+            message: 'Purchase and customer debt updated successfully'
+        });
+    } catch (error) {
+        await connection.rollback(); // Roll back transaction in case of error
+        console.error(error);
+        res.status(500).send({
+            success: false,
+            message: 'Error updating purchase'
+        });
+    } finally {
+        connection.release(); // Release the connection back to the pool
+    }
+};
+
+
+
+
+module.exports={getProduct,getProductByName,addProduct,updateProduct,deleteProduct,updateProductQuantity,getProductByCategory,getCategories,updateDebtPurchaseProducts };
