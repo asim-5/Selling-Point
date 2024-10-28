@@ -40,10 +40,12 @@
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                         <li class="nav-item"><a class="nav-link active" href="allcos.html">ALL CUSTOMER</a></li>
-                        <li class="nav-item"><a class="nav-link" href="customer.html">NEW CUSTOMER</a></li>
                         <li class="nav-item"><a class="nav-link" href="index.html">Dashboard</a></li>
                         <li class="nav-item"><a class="nav-link" href="vender.html">Vender</a></li>
                         <li class="nav-item"><a class="nav-link" href="stock.html">Stock</a></li>
+                        <li class="nav-item"></li>
+                            <a class="nav-link" href="vendorAdd.html">Add Supply</a>
+                        </li>
                     </ul>
                     <!-- Admin Button -->
                     <button id="admin-btn" class="btn btn-outline-danger">Admin</button>
@@ -67,6 +69,10 @@
                 <label for="customer-id-input">Customer ID:</label>
                 <input type="text" id="customer-id-input" placeholder="Enter Customer ID">
             </div>
+            <select id="signal" name="signal">
+                <option value=0>Pay</option>
+                <option value=1>Debt</option>
+            </select>
             <!-- Save Receipt Button -->
             <button id="save-receipt-button">Save & Print Receipt</button>
         </div>
@@ -166,12 +172,15 @@
     
                         if (productsData.success) {
                             categories[categoryName] = productsData.data.map(product => ({
+                                productId: product.product_id,
                                 name: product.name,
                                 price: product.price,
                                 category: categoryName
                             }));
-    
                             // Add category button
+                            // categories[categoryName].forEach(item => {
+                            //     console.log('Product ID:', item.productId);
+                            // });
                             const button = document.createElement('button');
                             button.className = 'category-btn';
                             button.textContent = categoryName;
@@ -213,7 +222,7 @@
                 productDiv.classList.add('product-item');
                 productDiv.innerHTML = `
                     <span>${product.name}</span>
-                    <button class="product-button" data-name="${product.name}" data-price="${product.price}">Add</button>
+                    <button class="product-button" data-name="${product.name}" data-id="${product.productId}" data-price="${product.price}">Add</button>
                 `;
                 productList.appendChild(productDiv);
             });
@@ -264,7 +273,7 @@
                     productDiv.classList.add('product-item');
                     productDiv.innerHTML = `
                         <span>${product.name}</span>
-                        <button class="product-button" data-name="${product.name}" data-price="${product.price}">Add</button>
+                        <button class="product-button" data-name="${product.name}" data-id="${product.productId}" data-price="${product.price}">Add</button>
                     `;
                     productList.appendChild(productDiv);
                 });
@@ -274,8 +283,10 @@
             productList.addEventListener('click', (e) => {
                 if (e.target.classList.contains('product-button')) {
                     const productName = e.target.getAttribute('data-name');
+                    const productId=e.target.getAttribute('data-id');
+                   // console.log(productId);
                     const productPrice = parseFloat(e.target.getAttribute('data-price'));
-                    const product = { name: productName, price: productPrice };
+                    const product = { name: productName,id:productId, price: productPrice };
                     addToSale(product);
                 }
             });
@@ -329,17 +340,46 @@
                 }
                 updateSaleUI();
             }
-    
+            const signalSelect = document.getElementById('signal');
             // Save and print receipt functionality
-            saveReceiptButton.addEventListener('click', () => {
+             saveReceiptButton.addEventListener('click', async () => {
                 const receiptData = {
-                    customerId: customerIdInput.value,
-                    items: currentSale,
-                    total: totalEl.textContent,
+                    customer_id: customerIdInput.value, // Assuming this is the correct customer ID field
+                    purchase_date: new Date().toISOString().slice(0, 19).replace('T', ' '), // Current date in the required format
+                    total_price: parseFloat(totalEl.textContent.replace('$', '')), // Remove the $ and convert to number
+                    payment_status: signalSelect.value, // Assuming this is the field for payment status
+                    user_id: uid, // Assuming user_id is 1 for now (this can be dynamic if needed)
+                    items: currentSale.map(item => ({
+                        product_id: item.id, // Function to map product name to product ID
+                        price: item.price,
+                        quantity: item.quantity
+                    })),
                 };
-                console.log('Receipt Data:', receiptData);
-                alert('Receipt saved successfully!');
+
+             console.log('Formatted Receipt Data:', receiptData);
+
+                try {
+                    const response = await fetch('http://localhost:5000/api/v1/product/makeTransaction', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(receiptData),
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Failed to save receipt: ${response.statusText}`);
+                    }
+
+                    const result = await response.json();
+                    alert('Receipt saved successfully!');
+                    console.log('API Response:', result);
+                } catch (error) {
+                    console.error('Error saving receipt:', error);
+                    alert('Failed to save receipt. Please try again.');
+                }
             });
+
     
             // Load categories for user id
             loadCategories(getUserIdFromToken());
@@ -389,6 +429,8 @@
                 alert("An error occurred while trying to log in.");
             }
         });
+
+
 
     </script>
     

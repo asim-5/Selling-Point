@@ -1,10 +1,9 @@
 const db = require("../config/db");
 
-
-const getCustomers= async (req,res) => {
+const getVendors= async (req,res) => {
     try{
         const userId = req.params.id;
-        const data=await db.query('SELECT * FROM customers WHERE user_id = ?', [userId])
+        const data=await db.query('SELECT * FROM vendor WHERE user_id = ?', [userId])
         console.log(userId);
         if(!data){
             return res.status(404).send({
@@ -29,8 +28,7 @@ const getCustomers= async (req,res) => {
     }
 
 };
-
-const addCustomer=async(req,res)=>{
+const addVendor=async(req,res)=>{
     try{
         const userId=req.params.id;
         const {name, phone, email, address, last_update}=req.body;
@@ -42,7 +40,7 @@ const addCustomer=async(req,res)=>{
             })
 
         }
-        const data=await db.query(`INSERT INTO customers (  name, phone, email, address, last_update,user_id)VALUES(?,?,?,?,?,?) `,[name, phone, email, address, last_update,userId])
+        const data=await db.query(`INSERT INTO vendor (  name, phone, email, location, last_update,user_id)VALUES(?,?,?,?,?,?) `,[name, phone, email, address, last_update,userId])
             console.log(name)
             if(!data){
                 res.status(404).send({
@@ -52,7 +50,7 @@ const addCustomer=async(req,res)=>{
             }
             res.status(201).send({
                 success: true,
-                message: 'New Customer added'
+                message: 'New Vendor added'
 
 
             })
@@ -66,136 +64,106 @@ const addCustomer=async(req,res)=>{
         })
     }
 };
-
-const deleteCustomer=async(req,res)=>{
-    try{
-        const id=req.params.id
-        const {customer_id}=req.body;
-        if(!id){
-            res.status(500).send({
-                success: false,
-                message: 'invalid id'
-            })
-        }
-     console.log(customer_id,id);
-        const data=await db.query(`DELETE FROM customers WHERE customer_id = ? and user_id = ?;`,[customer_id,id])
-
-            if(!data){
-                res.status(404).send({
-                    success: false,
-                    message: 'Error in the delete query'
-                })
-            }
-            res.status(201).send({
-                success: true,
-                message: 'Customer deleted'
-
-
-            })
-
-    }
-    catch(error){
-        console.log(error)
-        res.status(500).send({
-            success: false,
-            message: error
-        })
-    }
-};
-const searchCustomers = async (req, res) => {
+const addSupply = async (req, res) => {
+    const connection = await db.getConnection(); // To handle the transaction
     try {
-        const searchTerm = req.query.name;
-        const userId = req.query.user_id;
+        const { vendor_id, purchase_date, total_price, payment_status, user_id, items  } = req.body;
+        console.log(vendor_id, purchase_date, total_price, payment_status, items, user_id);
 
-        if (!searchTerm) {
-            return res.status(400).send({
+        // Validate request body
+        if (!vendor_id || !purchase_date || !total_price || !items || !user_id) {
+            return res.status(400).json({
                 success: false,
-                message: 'Search term is required'
+                message: "Please provide all required fields."
             });
         }
 
-        if (!userId) {
-            return res.status(400).send({
+        // Begin transaction
+        await connection.beginTransaction();
+        const quantity=1;
+        const product_id=1;
+        // Insert into the `purchases` table
+        const [purchaseResult] = await connection.query(
+            'INSERT INTO vendor_supply ( purchase_date, total_price, payment_status, user_id, vendor_id) VALUES (?, ? ,?, ?, ?)',
+            [ purchase_date, total_price, payment_status, user_id, vendor_id]
+        );
+
+        const purchase_id = purchaseResult.insertId; // Get the generated purchase_id
+        console.log("hello");
+        console.log(purchase_id);
+        if (!purchase_id) {
+            return res.status(400).json({
                 success: false,
-                message: 'User ID is required'
+                message: "Purchase id error."
             });
         }
 
-        const query = `
-            SELECT * FROM customers 
-            WHERE name LIKE ? AND user_id = ?
-        `;
-        const values = [`%${searchTerm}%`, userId];
-        const [results] = await db.query(query, values);
+        // Iterate through the items to check quantities and update product quantities
+        for (const item of items) {
+            const { product_id, quantity, price } = item;
 
-        if (results.length === 0) {
-            return res.status(404).send({
-                success: false,
-                message: 'No customers found'
-            });
+            // Check available quantity in `products` table
+            const [productResult] = await connection.query(
+                'SELECT quantity FROM products WHERE product_id = ?',
+                [product_id]
+            );
+            const availableQuantity = productResult[0]?.quantity;
+
+            // if (!availableQuantity || availableQuantity < quantity) {
+            //     console.log("hello");
+            //     await connection.rollback(); // Rollback transaction
+            //     return res.status(400).json({
+            //         success: false,
+            //         message: `Insufficient stock for product ID ${product_id}. Available quantity: ${availableQuantity}, requested: ${quantity}`
+            //     });
+            // }
+
+            // Insert into `purchase_items` table
+            await connection.query(
+                'INSERT INTO supply_items (supply_id, product_id, user_id, quantity, price) VALUES (?, ?, ?, ?, ?)',
+                [purchase_id, product_id,  user_id, quantity, price]
+            );
+
+            // Subtract the purchased quantity from the `products` table
+            await connection.query(
+                'UPDATE products SET quantity = quantity + ? WHERE product_id = ?',
+                [quantity, product_id]
+            );
         }
-        res.status(200).send({
+
+        // Step to update total_debt and last_update if payment_status is 0
+        if (payment_status == 0) {
+            await connection.query(
+                'UPDATE vendor SET total_debt = total_debt + ?, last_update = NOW() WHERE vendor_id = ? AND user_id = ?',
+                [total_price, vendor_id, user_id]
+            );
+        }
+
+        // Commit the transaction
+        await connection.commit();
+
+        // Success response
+        res.status(201).json({
             success: true,
-            data: results
-        });
-    } catch (error) {
-        console.error(error);
-        res.status(500).send({
-            success: false,
-            message: 'Error searching for customers'
-        });
-    }
-};
-const updateCustomer = async (req, res) => {
-    try {
-        const userId = req.params.id; // Assuming userId is passed as a URL parameter
-        const {customer_id, name, phone, email, address, total_debt, last_update } = req.body; // Destructuring req.body
-   
-        if(!name || !phone || !email|| !address||!total_debt|| !last_update){
-            // console.log(name, price, description, vendor, quantity, category, arrival_date, selling_date,cost);
-            res.status(500).send({
-                success: false,
-                message: 'Please provide all fields'
-            })
-
-        }
-    
-
-        if (!userId) {
-            return res.status(500).send({
-                success: false,
-                message: 'Invalid user ID'
-            });
-        }
-
-        // console.log("Updating product with ID:", id);
-        
-        const data = await db.query('UPDATE customers SET  name=?, phone=?, email=?, address=?, total_debt=?, last_update=? WHERE customer_id=? AND user_id=?', [ name, phone, email, address, total_debt, last_update, customer_id, userId]);
-
-        if (data.affectedRows === 0) {
-            return res.status(404).send({
-                success: false,
-                message: 'Error in the update query or no matching record found'
-            });
-        }
-
-        res.status(200).send({
-            success: true,
-            message: 'Customer updated successfully'
+            message: "Transaction completed successfully",
+            purchase_id
         });
 
     } catch (error) {
-        console.error(error);
-        res.status(500).send({
+        // Rollback the transaction in case of error
+        await connection.rollback();
+        console.error('Error during transaction:', error);
+
+        // Error response
+        res.status(500).json({
             success: false,
-            message: 'Error updating the customer'
+            message: "Error completing the transaction"
         });
+    } finally {
+        connection.release(); // Release the connection
     }
 };
-
-
-
-const getDebtProductsByCustomer = async (req, res) => {
+const getDebtProductsByVendor = async (req, res) => {
     try {
         const userId=req.params.userId;
         const  customerId  = req.params.customerId;
@@ -209,7 +177,7 @@ const getDebtProductsByCustomer = async (req, res) => {
 
         const query = `
  SELECT 
-                pur.purchase_id, 
+                pur.supply_id, 
                 pur.total_price, 
                 pur.purchase_date, 
                 pur.payment_status,
@@ -217,17 +185,17 @@ const getDebtProductsByCustomer = async (req, res) => {
                 GROUP_CONCAT(pi.quantity ORDER BY p.product_id SEPARATOR ', ') AS quantity,
                 GROUP_CONCAT(pi.price ORDER BY p.product_id SEPARATOR ', ') AS price
             FROM 
-                purchases pur
+                vendor_supply pur
             JOIN 
-                purchase_items pi ON pur.purchase_id = pi.purchase_id
+                supply_items pi ON pur.supply_id = pi.supply_id
             JOIN 
                 products p ON pi.product_id = p.product_id
             WHERE 
-                pur.customer_id = ? 
+                pur.vendor_id = ? 
                 AND pur.user_id = ? 
                 AND pur.payment_status = FALSE
             GROUP BY 
-                pur.purchase_id, pur.total_price, pur.purchase_date, pur.payment_status
+                pur.supply_id, pur.total_price, pur.purchase_date, pur.payment_status
     `;
     const values = [customerId, userId];
     const [results] = await db.query(query, values);
@@ -252,7 +220,7 @@ const getDebtProductsByCustomer = async (req, res) => {
         });
     }
 };
-const getProductsByCustomer = async (req, res) => {
+const getProductsByVendor = async (req, res) => {
     try {
         const userId=req.params.userId;
         const  customerId  = req.params.customerId;
@@ -265,8 +233,8 @@ const getProductsByCustomer = async (req, res) => {
         }
 
         const query = `
-            SELECT 
-                pur.purchase_id, 
+ SELECT 
+                pur.supply_id, 
                 pur.total_price, 
                 pur.purchase_date, 
                 pur.payment_status,
@@ -274,17 +242,17 @@ const getProductsByCustomer = async (req, res) => {
                 GROUP_CONCAT(pi.quantity ORDER BY p.product_id SEPARATOR ', ') AS quantity,
                 GROUP_CONCAT(pi.price ORDER BY p.product_id SEPARATOR ', ') AS price
             FROM 
-                purchases pur
+                vendor_supply pur
             JOIN 
-                purchase_items pi ON pur.purchase_id = pi.purchase_id
+                supply_items pi ON pur.supply_id = pi.supply_id
             JOIN 
                 products p ON pi.product_id = p.product_id
             WHERE 
-                pur.customer_id = ? 
+                pur.vendor_id = ? 
                 AND pur.user_id = ? 
                 AND pur.payment_status = TRUE
             GROUP BY 
-                pur.purchase_id, pur.total_price, pur.purchase_date, pur.payment_status
+                pur.supply_id, pur.total_price, pur.purchase_date, pur.payment_status
     `;
     const values = [customerId, userId];
     const [results] = await db.query(query, values);
@@ -309,5 +277,4 @@ const getProductsByCustomer = async (req, res) => {
         });
     }
 };
-
-module.exports={addCustomer,deleteCustomer,getCustomers,searchCustomers,getDebtProductsByCustomer,updateCustomer,getProductsByCustomer}
+module.exports={getVendors,addVendor,addSupply,getDebtProductsByVendor,getProductsByVendor}

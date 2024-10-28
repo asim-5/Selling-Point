@@ -3,7 +3,7 @@ const db = require("../config/db");
 const getProduct= async (req,res) => {
     try{
         const userId = req.params.id;
-        const data=await db.query('SELECT * FROM products WHERE user_id = ?', [userId])
+        const data=await db.query('SELECT p.product_id, p.name, p.price, p.description, v.name AS vendor, p.quantity, p.category, p.arrival_date, p.selling_date,p.cost,p.user_id,p.vendor_id FROM products p JOIN vendor v ON p.vendor_id = v.vendor_id WHERE p.user_id = ?;', [userId])
         console.log(userId);
         if(!data){
             return res.status(404).send({
@@ -71,16 +71,16 @@ const getProductByName= async (req,res) => {
 const addProduct=async(req,res)=>{
     try{
         const userId=req.params.id;
-        const {name, price, description, vendor, quantity, category, arrival_date, selling_date,cost}=req.body;
-        if(!name || !price || !description|| !vendor|| !quantity|| !category|| !arrival_date||!selling_date||!cost){
-            console.log(name, price, description, vendor, quantity, category, arrival_date, selling_date,cost);
+        const {name, price, description, vendor_id, quantity, category, arrival_date, selling_date,cost}=req.body;
+        if(!name || !price || !description|| !vendor_id|| !quantity|| !category|| !arrival_date||!selling_date||!cost){
+            console.log(name, price, description, vendor_id, quantity, category, arrival_date, selling_date,cost);
             res.status(500).send({
                 success: false,
                 message: 'Please provide all fields'
             })
 
         }
-        const data=await db.query(`INSERT INTO products ( name, price, description, vendor, quantity, category, arrival_date, selling_date, cost,user_id)VALUES(?,?,?,?,?,?,?,?,?,?) `,[name, price, description, vendor, quantity, category, arrival_date, selling_date,cost,userId])
+        const data=await db.query(`INSERT INTO products ( name, price, description, quantity, category, arrival_date, selling_date, cost,user_id,vendor_id)VALUES(?,?,?,?,?,?,?,?,?,?) `,[name, price, description, quantity, category, arrival_date, selling_date,cost,userId,vendor_id])
             console.log(name)
             if(!data){
                 res.status(404).send({
@@ -345,7 +345,7 @@ const updateDebtPurchaseProducts = async (req, res) => {
         const customerTotalDebt = customer[0].total_debt;
       //  console.log(total_price,customerTotalDebt);
         // If payment_status changes from 0 to 1, check if total_price is greater than total_debt
-        if (oldPaymentStatus === 0 && payment_status === 1 && total_price > customerTotalDebt) {
+        if (oldPaymentStatus == 0 && payment_status == 1 && total_price > customerTotalDebt) {
             await connection.rollback(); // Roll back the transaction if the condition fails
             return res.status(400).send({
                 success: false,
@@ -356,7 +356,7 @@ const updateDebtPurchaseProducts = async (req, res) => {
         // Update the purchase fields
         const updateQuery = `
             UPDATE purchases 
-            SET purchase_date = ?, quantity = ?, total_price = ?, payment_status = ? 
+            SET purchase_date = ?, total_price = ?, payment_status = ? 
             WHERE purchase_id = ? AND customer_id = ? AND user_id = ?
         `;
         await connection.query(updateQuery, [purchase_date, quantity, total_price, payment_status, purchase_id, customer_id, user_id]);
@@ -412,7 +412,106 @@ const updateDebtPurchaseProducts = async (req, res) => {
     }
 };
 
+const makeTransaction = async (req, res) => {
+    const connection = await db.getConnection(); // To handle the transaction
+    try {
+        const { customer_id, purchase_date, total_price, payment_status, items, user_id } = req.body;
+        console.log(customer_id, purchase_date, total_price, payment_status, items, user_id);
+
+        // Validate request body
+        if (!customer_id || !purchase_date || !total_price || !items || !user_id) {
+            return res.status(400).json({
+                success: false,
+                message: "Please provide all required fields."
+            });
+        }
+
+        // Begin transaction
+        await connection.beginTransaction();
+        const quantity=1;
+        const product_id=1;
+        // Insert into the `purchases` table
+        const [purchaseResult] = await connection.query(
+            'INSERT INTO purchases (customer_id, product_id, purchase_date, quantity, total_price, payment_status, user_id) VALUES (?, ? ,?, ?, ?, ?, ?)',
+            [customer_id, product_id, purchase_date, quantity, total_price, payment_status, user_id]
+        );
+
+        const purchase_id = purchaseResult.insertId; // Get the generated purchase_id
+        if (!purchase_id) {
+            return res.status(400).json({
+                success: false,
+                message: "Purchase id error."
+            });
+        }
+
+        // Iterate through the items to check quantities and update product quantities
+        for (const item of items) {
+            const { product_id, quantity, price } = item;
+
+            // Check available quantity in `products` table
+            const [productResult] = await connection.query(
+                'SELECT quantity FROM products WHERE product_id = ?',
+                [product_id]
+            );
+            const availableQuantity = productResult[0]?.quantity;
+
+            if (!availableQuantity || availableQuantity < quantity) {
+                console.log("hello");
+                await connection.rollback(); // Rollback transaction
+                return res.status(400).json({
+                    success: false,
+                    message: `Insufficient stock for product ID ${product_id}. Available quantity: ${availableQuantity}, requested: ${quantity}`
+                });
+            }
+
+            // Insert into `purchase_items` table
+            await connection.query(
+                'INSERT INTO purchase_items (purchase_id, product_id, price, quantity, user_id) VALUES (?, ?, ?, ?, ?)',
+                [purchase_id, product_id, price, quantity, user_id]
+            );
+
+            // Subtract the purchased quantity from the `products` table
+            await connection.query(
+                'UPDATE products SET quantity = quantity - ? WHERE product_id = ?',
+                [quantity, product_id]
+            );
+        }
+
+        // Step to update total_debt and last_update if payment_status is 0
+        if (payment_status == 0) {
+            await connection.query(
+                'UPDATE customers SET total_debt = total_debt + ?, last_update = NOW() WHERE customer_id = ? AND user_id = ?',
+                [total_price, customer_id, user_id]
+            );
+        }
+
+        // Commit the transaction
+        await connection.commit();
+
+        // Success response
+        res.status(201).json({
+            success: true,
+            message: "Transaction completed successfully",
+            purchase_id
+        });
+
+    } catch (error) {
+        // Rollback the transaction in case of error
+        await connection.rollback();
+        console.error('Error during transaction:', error);
+
+        // Error response
+        res.status(500).json({
+            success: false,
+            message: "Error completing the transaction"
+        });
+    } finally {
+        connection.release(); // Release the connection
+    }
+};
 
 
 
-module.exports={getProduct,getProductByName,addProduct,updateProduct,deleteProduct,updateProductQuantity,getProductByCategory,getCategories,updateDebtPurchaseProducts };
+
+
+module.exports={getProduct,getProductByName,addProduct,updateProduct,deleteProduct,updateProductQuantity,getProductByCategory,getCategories,updateDebtPurchaseProducts,makeTransaction };

@@ -167,6 +167,53 @@
         .btn-print:hover {
             background-color: #45a049;
         }
+        .modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: #f9f9f9;
+    margin: 10% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 500px;
+    border-radius: 8px;
+}
+
+.close-btn {
+    color: #aaa;
+    float: right;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close-btn:hover {
+    color: #000;
+}
+
+#vendor-list {
+    list-style: none;
+    padding: 0;
+}
+
+#vendor-list li {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    cursor: pointer;
+}
+
+#vendor-list li:hover {
+    background-color: #f1f1f1;
+}
     </style>
 </head>
 <body>
@@ -190,6 +237,9 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="stock.html">Stock</a>
+                    </li>
+                    <li class="nav-item"></li>
+                    <a class="nav-link" href="vendorAdd.html">Add Supply</a>
                     </li>
                 </ul>
                 <form class="d-flex">
@@ -222,8 +272,20 @@
                 <textarea id="description" name="description" placeholder="Enter product description" rows="4" required></textarea><br>
 
                 <!-- Vendor -->
-                <label for="vendor">Vendor</label><br>
-                <input type="text" id="vendor" name="vendor" placeholder="Enter vendor name" required><br>
+                <div class="vendor-id">
+                    <label for="vendor-id-input">Vendor ID:</label>
+                    <button id="open-modal-btn">Select Vendor</button>
+                    <input type="text" id="vendor-id-input" placeholder="Vendor ID" readonly>
+                </div>
+                
+                <!-- Modal structure -->
+                <div id="vendor-modal" class="modal">
+                    <div class="modal-content">
+                        <span class="close-btn">&times;</span>
+                        <h2>Select Vendor</h2>
+                        <ul id="vendor-list"></ul>
+                    </div>
+                </div>
 
                 <!-- Quantity -->
                 <label for="quantity">Quantity</label><br>
@@ -261,6 +323,7 @@
                     <th>Quantity</th>
                     <th>Category</th>
                     <th>Price</th>
+                    <th>Venndor</th>
                     <th>Description</th>
                 </tr>
             </thead>
@@ -329,6 +392,7 @@
                     <td>${product.quantity}</td>
                     <td>${product.category}</td>
                     <td>${product.price}</td>
+                    <td>${product.vendor}</td>
                     <td>${product.description}</td>
                 `;
                 tableBody.appendChild(row);
@@ -365,7 +429,7 @@
             name: document.getElementById('productName').value,
             price: document.getElementById('price').value,
             description: document.getElementById('description').value,
-            vendor: document.getElementById('vendor').value,
+            vendor_id: document.getElementById('vendor_id').value,
             quantity: document.getElementById('quantity').value,
             category: document.getElementById('category').value,
             arrival_date: document.getElementById('arrivalDate').value,
@@ -409,6 +473,64 @@
         function printPage() {
             window.print();
         }
+        document.addEventListener("DOMContentLoaded", () => {
+    const openModalBtn = document.getElementById("open-modal-btn");
+    const modal = document.getElementById("vendor-modal");
+    const closeModalBtn = document.querySelector(".close-btn");
+    const vendorList = document.getElementById("vendor-list");
+    const vendorIdInput = document.getElementById("vendor-id-input");
+    const userId = 'yourUserId'; // Replace with actual user ID
+
+    // Open modal on button click
+    openModalBtn.addEventListener("click", async () => {
+        modal.style.display = "block";
+        await fetchVendors();
+    });
+
+    // Close modal on 'X' button click
+    closeModalBtn.addEventListener("click", () => {
+        modal.style.display = "none";
+    });
+
+    // Close modal when clicking outside modal content
+    window.addEventListener("click", (event) => {
+        if (event.target === modal) {
+            modal.style.display = "none";
+        }
+    });
+
+    // Fetch vendors and populate list
+    async function fetchVendors() {
+        try {
+            const apiUrl = `http://localhost:5000/api/v1/vendor/getVendors/${userId}`;
+            const response = await fetch(apiUrl);
+            const data = await response.json();
+            console.log(data);
+            if (data.success) {
+                vendorList.innerHTML = ""; // Clear previous list items
+                data.data.forEach(vendor => {
+                    const listItem = document.createElement("li");
+                    listItem.textContent = `${vendor.name} (ID: ${vendor.vendor_id})`;
+                    listItem.dataset.vendorId = vendor.vendor_id;
+
+                    // Set vendor ID on list item click
+                    listItem.addEventListener("click", () => {
+                        vendorIdInput.value = listItem.dataset.vendorId;
+                        modal.style.display = "none"; // Close the modal
+                    });
+
+                    vendorList.appendChild(listItem);
+                });
+            } else {
+                console.error(data.message);
+                vendorList.innerHTML = "<li>No vendors available.</li>";
+            }
+        } catch (error) {
+            console.error("Error fetching vendor data:", error);
+            vendorList.innerHTML = "<li>Error loading vendors.</li>";
+        }
+    }
+});
     </script>
 
     <!-- Bootstrap JS -->

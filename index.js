@@ -19,6 +19,7 @@ app.use("/api/v1/product",require("./routes/product_route"))
 app.use("/api/v1/customer",require("./routes/customer_route"))
 app.use("/api/v1/debt",require("./routes/debt_route"))
 app.use("/api/v1/user",require("./routes/user_route"))
+app.use("/api/v1/vendor",require("./routes/vendor_route"))
 
 app.get("/test",(req,resp)=>{
     resp.send("app is workinghhha..")

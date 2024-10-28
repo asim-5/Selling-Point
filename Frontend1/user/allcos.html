@@ -167,7 +167,9 @@
                   <li class="nav-item"></li>
                     <a class="nav-link" href="stock.html">stock</a>
                   </li>
-                  
+                    <li class="nav-item"></li>
+                        <a class="nav-link" href="vendorAdd.html">Add Supply</a>
+                    </li>
                     </ul>
                     <form class="d-flex">
                       <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
@@ -248,7 +250,8 @@
                   <th>Email</th>
                   <th>Phone Number</th>
                   <th>address</th>
-                  <th>DETAIL</th>
+                  <th>Debt Detail</th>
+                  <th>Purchase Details</th>
               </tr>
           </thead>
           <tbody id="customerTableBody">
@@ -334,7 +337,8 @@ function renderCustomers() {
             <td>${customer.phone}</td>
             <td>${customer.address}</td>
             <td><a href="detail.html?id=${customer.id}"><input type="button" value="DETAIL" class="btn btn-info"></a></td>
-
+            <td><a href="PurchaseDetail.html?id=${customer.id}"><input type="button" value="DETAIL" class="btn btn-info"></a></td>
+        
         `;
 
         tableBody.appendChild(row);

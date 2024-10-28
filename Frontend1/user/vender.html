@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
     <head>
-        <title>ALL VENDOR</title>
+        <title>ALL CUSTOMER</title>
         <!-- Required meta tags -->
         <meta charset="utf-8" />
         <meta
@@ -17,8 +17,8 @@
             crossorigin="anonymous"
         />
         <style>
-          /* General body styling */
-          body {
+             /* General body styling */
+        body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
@@ -167,7 +167,9 @@
                   <li class="nav-item"></li>
                     <a class="nav-link" href="stock.html">stock</a>
                   </li>
-                  
+                    <li class="nav-item"></li>
+                        <a class="nav-link" href="vendorAdd.html">Add Supply</a>
+                    </li>
                     </ul>
                     <form class="d-flex">
                       <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
@@ -178,29 +180,66 @@
               </nav>
         </header>
         <main>
- 
-
+<!-- 
+<div class="container">
+    <h1 class="text-center" >Company Name</h1>
+    <h2 class="text-center">Costumer Data</h2>
+  <div
+    class="table-responsive"
+  >
+    <table
+        class="table table-bordered text-center"
+    >
+        <thead>
+            <tr>
+                <th scope="col">NAME</th>
+                <th scope="col">zamidar Code </th>
+                <th scope="col">phone Number</th>
+                <th scope="col" colspan="2">Details</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="">
+                <td scope="row">Shah Rabi</td>
+                <td >56</td>
+                <td>03151234567</td>
+                <td><a href="detail.html"><input type="button" value="View Details" class="btn btn-success"></a></td>
+                <td><a href="loan.html"><input type="button" value="LOAN" class="btn btn-success"></a></td>
+            </tr>
+           
+        </tbody>
+    </table>
+  </div> -->
+<!-- </div> -->
 <!-- Main Page (allcos.html) -->
- ,<h1>vendor</h1>
-
     <!-- Button to open the modal -->
-    <!-- Button to open the modal -->
-    <button class="open-btn" onclick="openModal()">Add New vender</button>
+    <button class="open-btn" onclick="openModal()">Add New Vendor</button>
 
     <!-- Modal for adding a customer -->
     <div id="addCustomerModal">
         <div class="modal-content">
             <button onclick="closeModal()" class="close-btn">&times;</button>
-            <div class="modal-header">Add Customer</div>
+            <div class="modal-header">Add Vendor</div>
             <form id="customerForm">
-                <label for="name">Customer Name:</label><br>
-                <input type="text" id="name" name="name" placeholder="Enter customer name" required><br>
-                <label for="email">Customer Email:</label><br>
-                <input type="email" id="email" name="email" placeholder="Enter customer email" required><br>
+                <label for="name">Vendor Name:</label><br>
+                <input type="text" id="name" name="name" placeholder="Enter vendor name" required><br>
+                
+                <label for="phno">Vendor Phone Number:</label><br>
+                <input type="text" id="phno" name="phno" placeholder="Enter vendor phone number" required><br>
+                
+                <label for="email">Vendor Email:</label><br>
+                <input type="email" id="email" name="email" placeholder="Enter vendor email" required><br>
+                
+                <label for="address">Vendor location:</label><br>
+                <input type="text" id="address" name="address" placeholder="Enter vendor address" required><br>
+                
+
                 <button type="submit" class="submit-btn">Submit</button>
             </form>
         </div>
     </div>
+
+
 
 <div class="container">
   <div class="table-responsive">
@@ -208,9 +247,11 @@
           <thead>
               <tr>
                   <th>NAME</th>
-                  <th>Zamindar Code</th>
+                  <th>Email</th>
                   <th>Phone Number</th>
-                  <th>DETAIL</th>
+                  <th>address</th>
+                  <th>Debt Detail</th>
+                  <th>Purchase Details</th>
               </tr>
           </thead>
           <tbody id="customerTableBody">
@@ -220,22 +261,67 @@
   </div>
 </div>
 <script>
+        const token = localStorage.getItem('token'); 
+        if(!token){
+            window.location.href = 'login.html';
+        }
+        function getUserIdFromToken() {
+            // Retrieve the token from local storage
+            if (!token) {
+                console.error('No token found in local storage');
+                return null;
+            }
+    
+            // Decode the token
+            const payload = token.split('.')[1];
+            const decodedPayload = JSON.parse(atob(payload));
+    
+            // Extract the user ID (assuming it's stored under 'userId' in the payload)
+            const userId = decodedPayload.userId;
+    
+            return userId;
+        }
+
+document.addEventListener('DOMContentLoaded', () => {
+            const userId = getUserIdFromToken(); 
+            getCustomersList(userId);
+        });
   // Array of customer objects
-const customers = [
-    {
-        id: 56,
-        name: "Shah Rabi",
-        zamindarCode: 56,
-        phoneNumber: "03151234567",
-    },
-    {
-        id: 78,
-        name: "John Doe",
-        zamindarCode: 78,
-        phoneNumber: "01234567890",
-    },
-    // Add more customer objects as needed
-];
+  let customers = [];
+
+async function getCustomersList(userId) {
+    try {
+        // Define the API endpoint
+        const apiUrl = `http://localhost:5000/api/v1/vendor/getVendors/${userId}`;
+
+        // Make the GET request to fetch customer data
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+
+        // Check if the request was successful
+        if (data.success) {
+            // Populate the global customer list with the fetched data
+            customers = data.data.map(customer => {
+                return {
+                    id: customer.vendor_id,
+                    name: customer.name,
+                    email: customer.email,
+                    phone: customer.phone,
+                    address: customer.location
+                };
+            });
+
+            console.log("Customer List:", customers);
+            renderCustomers(); // Call renderCustomers after data is fetched
+        } else {
+            console.error(data.message);
+            customers = []; // Reset to an empty list if no data
+        }
+    } catch (error) {
+        console.error("Error fetching customer data:", error);
+        customers = []; // Reset to an empty list in case of error
+    }
+}
 
 // Function to render customers to the table
 function renderCustomers() {
@@ -244,12 +330,14 @@ function renderCustomers() {
 
     customers.forEach((customer) => {
         const row = document.createElement("tr");
-
         row.innerHTML = `
             <td>${customer.name}</td>
-            <td>${customer.zamindarCode}</td>
-            <td>${customer.phoneNumber}</td>
-            <td><a href="vdetail.html?id=${customer.id}"><input type="button" value="DETAIL" class="btn btn-info"></a></td>
+            <td>${customer.email}</td>
+            <td>${customer.phone}</td>
+            <td>${customer.address}</td>
+            <td><a href="vendorDebt.html?id=${customer.id}"><input type="button" value="DETAIL" class="btn btn-info"></a></td>
+            <td><a href="vendorPurchase.html?id=${customer.id}"><input type="button" value="DETAIL" class="btn btn-info"></a></td>
+        
         `;
 
         tableBody.appendChild(row);
@@ -272,10 +360,67 @@ renderCustomers();
         document.getElementById('customerForm').addEventListener('submit', function(event) {
             event.preventDefault();
             const name = document.getElementById('name').value;
+            const phone = document.getElementById('phno').value;
             const email = document.getElementById('email').value;
-            console.log('Customer Added:', name, email);
+            const address = document.getElementById('address').value;
+            const last_update = new Date().toISOString().split('T')[0];;
+            addNewCustomer(name,phone,email,address,last_update)
             closeModal();
         });
+
+        async function addNewCustomer(name,phone,email,address,last_update) {
+
+    // Make sure all fields are filled in
+    if (!name || !phone || !email || !address) {
+        alert("Please fill in all fields!");
+        return;
+    }
+
+    // Create the body object
+    const customerData = {
+        name,
+        phone,
+        email,
+        address,
+        last_update
+    };
+
+
+    const userId = getUserIdFromToken(); // Function that decodes token and extracts userId (already in your code)
+
+    try {
+        // Define the API endpoint (replace 'localhost' with your actual server address)
+        console.log("hello");
+        const apiUrl = `http://localhost:5000/api/v1/vendor/addVendor/${userId}`;
+
+        // Make the POST request
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}` // Assuming you need to send the token for authentication
+            },
+            body: JSON.stringify(customerData)
+        });
+
+        const result = await response.json();
+
+        // Check if the customer was successfully added
+        if (result.success) {
+            alert('Customer added successfully');
+            // Optionally, redirect to another page or refresh the customer list
+        } else {
+            console.error(result.message);
+            alert('Failed to add customer: ' + result.message);
+        }
+
+    } catch (error) {
+        console.error("Error while adding customer:", error);
+        alert('An error occurred while adding the customer.');
+    }
+}
+
+
 </script>
 
         </main>
