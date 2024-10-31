@@ -479,7 +479,7 @@
     const closeModalBtn = document.querySelector(".close-btn");
     const vendorList = document.getElementById("vendor-list");
     const vendorIdInput = document.getElementById("vendor-id-input");
-    const userId = 'yourUserId'; // Replace with actual user ID
+    const userId = getUserIdFromToken(); // Replace with actual user ID
 
     // Open modal on button click
     openModalBtn.addEventListener("click", async () => {

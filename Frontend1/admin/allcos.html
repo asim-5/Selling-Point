@@ -156,10 +156,7 @@
                         <a class="nav-link active" aria-current="page" href="allcos.html">ALL CUSTOMER</a>
                       </li>
                       <li class="nav-item">
-                        <a class="nav-link" href="customer.html">NEW CUSTOMER</a>
-                      </li>
-                      <li class="nav-item">
-                        <a class="nav-link" href="index.html">Dashboard</a>
+                        <a class="nav-link" href="indexx.html">Dashboard</a>
                       </li>
                       <li class="nav-item"></li>
                     <a class="nav-link" href="vender.html">vender</a>
@@ -254,6 +251,7 @@
                   <th>address</th>
                   <th>Debt Detail</th>
                   <th>Purchase Details</th>
+                  <th>Debt Payments</th>
               </tr>
           </thead>
           <tbody id="customerTableBody">
@@ -340,7 +338,7 @@ function renderCustomers() {
             <td>${customer.address}</td>
             <td><a href="detail.html?id=${customer.id}"><input type="button" value="DETAIL" class="btn btn-info"></a></td>
             <td><a href="PurchaseDetail.html?id=${customer.id}"><input type="button" value="DETAIL" class="btn btn-info"></a></td>
-
+            <td><a href="DebtPayment.html?id=${customer.id}"><input type="button" value="DETAIL" class="btn btn-info"></a></td>
         `;
 
         tableBody.appendChild(row);

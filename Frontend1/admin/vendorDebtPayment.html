@@ -101,9 +101,6 @@
             <a class="nav-link active" aria-current="page" href="allcos.html">ALL CUSTOMER</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="customer.html">NEW CUSTOMER</a>
-          </li>
-          <li class="nav-item">
             <a class="nav-link" href="indexx.html">Dashboard</a>
           </li>
           <li class="nav-item"></li>
@@ -121,7 +118,7 @@
     </div>
   </nav>
 </header>
-    <h2>Customer Data</h2>
+    <h2>Vendor Data</h2>
 
     <div>
         <p style="font-weight: bold; font-size: 16px; color: #333; display: flex; align-items: center; gap: 5px; ">
@@ -149,12 +146,11 @@
         <table>
             <thead>
                 <tr>
-                    <th>Product Name</th>
-                    <th>Purchase date</th>
-                    <th>quantity</th>
+                    <th>id</th>
+                    <th>Payment date</th>
                     <th>Total Amount</th>
                     <th>Remove</th>
-                    <th>print</th>
+                    <th>Print</th>
                     
                 </tr>
             </thead>
@@ -165,33 +161,33 @@
     </div>
 
     <script>
-    const token = localStorage.getItem('token'); 
-        if(!token){
-            window.location.href = 'login.html';
-        }
-        function getUserIdFromToken() {
-            // Retrieve the token from local storage
-            if (!token) {
-                console.error('No token found in local storage');
-                return null;
-            }
-    
-            // Decode the token
-            const payload = token.split('.')[1];
-            const decodedPayload = JSON.parse(atob(payload));
-    
-            // Extract the user ID (assuming it's stored under 'userId' in the payload)
-            const userId = decodedPayload.userId;
-    
-            return userId;
-        }
+  const token = localStorage.getItem('token'); 
+if(!token){
+    window.location.href = 'login.html';
+}
+
+function getUserIdFromToken() {
+    if (!token) {
+        console.error('No token found in local storage');
+        return null;
+    }
+
+    try {
+        const payload = token.split('.')[1];
+        const decodedPayload = JSON.parse(atob(payload));
+        return decodedPayload.userId;
+    } catch (error) {
+        console.error('Invalid token format', error);
+        return null;
+    }
+}
 
 let customers = [];
 
-        async function getCustomersList(userId) {
+async function getCustomersList(userId) {
             try {
                 // Define the API endpoint
-                const apiUrl = `http://localhost:5000/api/v1/customer/getall/${userId}`;
+                const apiUrl = `http://localhost:5000/api/v1/vendor/getVendors/${userId}`;
 
                 // Make the GET request to fetch customer data
                 const response = await fetch(apiUrl);
@@ -202,11 +198,11 @@ let customers = [];
                     // Populate the global customer list with the fetched data
                     customers = data.data.map(customer => {
                         return {
-                            id: customer.customer_id,
+                            id: customer.vendor_id,
                             name: customer.name,
                             email: customer.email,
                             phone: customer.phone,
-                            address: customer.address,
+                            address: customer.location,
                             debt: customer.total_debt,
                             update: customer.last_update
                         };
@@ -223,20 +219,21 @@ let customers = [];
                 customers = []; // Reset to an empty list in case of error
             }
         }
-        document.addEventListener('DOMContentLoaded', () => {
-            const userId = getUserIdFromToken();
-            getCustomersList(userId);
-        });
+
+document.addEventListener('DOMContentLoaded', () => {
+    const userId = getUserIdFromToken();
+    if (userId) getCustomersList(userId);
+});
 
 // Function to get query parameters
 function getQueryParam(param) {
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get(param);
 }
-
+const customerId = getQueryParam('id');
 // Function to render customer details
 function renderCustomerDetails() {
-    const customerId = getQueryParam('id');
+    
     const customer = customers.find(cust => cust.id == customerId);
 
     if (customer) {
@@ -250,97 +247,79 @@ function renderCustomerDetails() {
             <td>${customer.debt}</td>
         `;
 
-        const update=document.getElementById("last_update");
+        const update = document.getElementById("last_update");
         const formattedDate = new Date(customer.update).toLocaleDateString();
-        update.innerHTML=`
-        <p style="    margin-bottom: 0;">${formattedDate}</p>
-        `;
+        update.textContent = formattedDate;
     } else {
-        document.getElementById('customerDetails').innerHTML = '<p>Customer not found.</p>';
+        console.error("Customer not found.");
     }
 }
-        // Populate customer info
-    //     const customerInfo = document.getElementById("customer-info");
-    //     customerInfo.innerHTML = `
-    //         <tr>
-    //             <td>${customerData.name}</td>
-    //             <td>${customerData.id}</td>
-    //             <td>${customerData.phoneNumber}</td>
-    //             <td>${customerData.totalLoan}</td>
-    //             <td><button class="btn btn-edit" id='insert'>INSERT</button></td>
-                
-    //         </tr>
-    //     `;
-    //     document.getElementById('insert').addEventListener('click', function() {
-    //     window.location.href = 'insert.html';
-    // });
 
-    let debtProducts = [];
+// let debtProducts = [];
 
-    async function fetchDebtProducts(userId, customerId) {
-        try {
-            const apiUrl = `http://localhost:5000/api/v1/customer/product_history/${userId}/${customerId}`;
-            const response = await fetch(apiUrl, {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' }
-            });
-            const data = await response.json();
-
-            if (data.success) {
-                debtProducts = data.data.map(product => ({
-                    purchaseId: product.purchase_id,
-                    productId: product.product_id,
-                    name: product.name,
-                    purchaseDate: new Date(product.purchase_date).toLocaleDateString(),
-                    quantity: product.quantity,
-                    totalPrice: product.total_price,
-                    payment_status: product.payment_status
-                }));
-                renderDebtProducts();
-            } else {
-                console.error(data.message);
-                debtProducts = [];
-            }
-        } catch (error) {
-            console.error("Error fetching debt products:", error);
-            debtProducts = [];
-        }
-    }
-
-    function renderDebtProducts() {
-        const loanInfo = document.getElementById("loan-info");
-        loanInfo.innerHTML = ''; // Clear before rendering
-        debtProducts.forEach(product => {
-            loanInfo.innerHTML += `
-                <tr>
-                    <td>${product.name}</td>
-                    <td>${product.purchaseDate}</td>
-                    <td>${product.quantity}</td>
-                    <td>${product.totalPrice}</td>
-                    <td><button class="btn-print" onclick="Remove(${product.purchaseId})">Remove</button></td>
-                    <td><button class="btn-print" onclick="printPage()">Print</button></td>
-                </tr>
-            `;
+async function fetchDebtRecords(userId, customerId) {
+    try {
+        const apiUrl = `http://localhost:5000/api/v1/debt/debtCustomer/${customerId}/${userId}`;
+        const response = await fetch(apiUrl, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
         });
-    }
-    const userId = getUserIdFromToken(); 
-    const customerId = getQueryParam('id'); 
-    document.addEventListener('DOMContentLoaded', () => {
-        
-        console.log(customerId);
-        fetchDebtProducts(userId, customerId);
-    });
+        const data = await response.json();
 
-        // Populate loan data
-      async function Remove(purchase_id){
-        
-    const confirmDelete = confirm("Are you sure you want to remove this record?");
+        if (data.success) {
+            const debtRecords = data.data.map(record => ({
+                debtId: record.payment_id,
+                customerId: record.customer_id,
+                paymentDate: new Date(record.payment_date).toLocaleDateString(),
+                amount: record.payment_amount,
+            }));
+            renderDebtRecords(debtRecords);
+        } else {
+            console.error(data.message);
+        }
+    } catch (error) {
+        console.error("Error fetching debt records:", error);
+    }
+}
+
+function renderDebtRecords(debtRecords) {
+    const loanInfo = document.getElementById("loan-info");
+    loanInfo.innerHTML = ''; // Clear before rendering
+    debtRecords.forEach(record => {
+       
+        loanInfo.innerHTML += `
+            <tr>
+                <td>${record.debtId}</td>
+                <td>${record.paymentDate}</td>
+                <td>${record.amount}</td>
+                <td><button class="btn-print" onclick="Remove(${record.debtId})">Remove</button></td>
+                <td><button class="btn-print" onclick="printPage()">Print</button></td>
+            </tr>
+        `;
+ 
+        console.log(loanInfo);
+    });
+}
+const userId = getUserIdFromToken(); 
+document.addEventListener('DOMContentLoaded', () => {
+    
+    const customerId = getQueryParam('id'); 
+    console.log(customerId);
+    if (userId && customerId) fetchDebtRecords(userId, customerId);
+});
+
+function printPage() {
+    window.print();
+}
+async function Remove(debtId) {
+    console.log(debtId,customerId);
+    const confirmDelete = confirm("Are you sure you want to remove this debt record?");
     
     if (!confirmDelete) {
         // Exit the function if the user cancels
         return;
     }
-    const apiUrl = `http://localhost:5000/api/v1/customer/deletePurchase/${userId}/${customerId}/${purchase_id}`;
+    const apiUrl = `http://localhost:5000/api/v1/debt/debtRemove/${customerId}/${debtId}/${userId}`;
 
     try {
         const response = await fetch(apiUrl, {
@@ -355,21 +334,15 @@ function renderCustomerDetails() {
         if (data.success) {
             console.log('Debt record successfully removed.');
             // Optionally, refresh the list of debt records here
-            fetchDebtProducts(userId, customerId);
+            fetchDebtRecords(userId, customerId);
+            getCustomersList(userId);
         } else {
             console.error('Error:', data.message);
         }
     } catch (error) {
         console.error('Error while trying to delete debt record:', error);
     }
-
-      }
-    
-
-    // Function to print the page
-    function printPage() {
-            window.print();
-        }
+}
 
 
     </script>

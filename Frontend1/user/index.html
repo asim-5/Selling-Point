@@ -65,13 +65,23 @@
             <p>Tax (NZ GST): <span id="tax">$0.00</span></p>
             <p><b>TOTAL: <span id="total">$0.00</span></b></p>
             <!-- Customer ID Input -->
-            <div class="customer-id">
-                <label for="customer-id-input">Customer ID:</label>
-                <input type="text" id="customer-id-input" placeholder="Enter Customer ID">
+            <div class="vendor-id">
+                <label for="vendor-id-input">Customer ID:</label>
+                <button id="open-modal-btn">Select Customer</button>
+                <input type="text" id="vendor-id-input" placeholder="Customer ID" readonly>
+            </div>
+            
+            <!-- Modal structure -->
+            <div id="vendor-modal" class="modal">
+                <div class="modal-content">
+                    <span class="close-btn">&times;</span>
+                    <h2>Select Customer</h2>
+                    <ul id="vendor-list"></ul>
+                </div>
             </div>
             <select id="signal" name="signal">
-                <option value=0>Pay</option>
-                <option value=1>Debt</option>
+                <option value=1>Pay</option>
+                <option value=0>Debt</option>
             </select>
             <!-- Save Receipt Button -->
             <button id="save-receipt-button">Save & Print Receipt</button>
@@ -236,7 +246,7 @@
             const totalEl = document.getElementById('total');
             const searchInput = document.getElementById('product-search');
             const categoryButtonsContainer = document.getElementById('categoryButtons');
-            const customerIdInput = document.getElementById('customer-id-input');
+            const customerIdInput = document.getElementById('vendor-id-input');
             const saveReceiptButton = document.getElementById('save-receipt-button');
     
             // Filter products by category and search term
@@ -378,14 +388,17 @@
                     console.error('Error saving receipt:', error);
                     alert('Failed to save receipt. Please try again.');
                 }
+                location.reload();
+
             });
 
     
             // Load categories for user id
             loadCategories(getUserIdFromToken());
+
     
         });
-    
+     
         function logout() {
             // Implement logout functionality
             localStorage.removeItem('token');
@@ -429,7 +442,64 @@
                 alert("An error occurred while trying to log in.");
             }
         });
+        document.addEventListener("DOMContentLoaded", () => {
+            const openModalBtn = document.getElementById("open-modal-btn");
+            const modal = document.getElementById("vendor-modal");
+            const closeModalBtn = document.querySelector(".close-btn");
+            const vendorList = document.getElementById("vendor-list");
+            const vendorIdInput = document.getElementById("vendor-id-input");
+            // const userId = getUserIdFromToken(); // Replace with actual user ID
 
+            // Open modal on button click
+            openModalBtn.addEventListener("click", async () => {
+                modal.style.display = "block";
+                await fetchVendors();
+            });
+
+            // Close modal on 'X' button click
+            closeModalBtn.addEventListener("click", () => {
+                modal.style.display = "none";
+            });
+
+            // Close modal when clicking outside modal content
+            window.addEventListener("click", (event) => {
+                if (event.target === modal) {
+                    modal.style.display = "none";
+                }
+            });
+
+            // Fetch vendors and populate list
+            async function fetchVendors() {
+                try {
+                    const apiUrl = `http://localhost:5000/api/v1/customer/getall/${uid}`;
+                    const response = await fetch(apiUrl);
+                    const data = await response.json();
+                    console.log(data);
+                    if (data.success) {
+                        vendorList.innerHTML = ""; // Clear previous list items
+                        data.data.forEach(vendor => {
+                            const listItem = document.createElement("li");
+                            listItem.textContent = `${vendor.name} (ID: ${vendor.customer_id})`;
+                            listItem.dataset.vendorId = vendor.customer_id;
+
+                            // Set vendor ID on list item click
+                            listItem.addEventListener("click", () => {
+                                vendorIdInput.value = listItem.dataset.vendorId;
+                                modal.style.display = "none"; // Close the modal
+                            });
+
+                            vendorList.appendChild(listItem);
+                        });
+                    } else {
+                        console.error(data.message);
+                        vendorList.innerHTML = "<li>No vendors available.</li>";
+                    }
+                } catch (error) {
+                    console.error("Error fetching vendor data:", error);
+                    vendorList.innerHTML = "<li>Error loading vendors.</li>";
+                }
+            }
+        });
 
 
     </script>

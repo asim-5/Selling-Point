@@ -1,10 +1,12 @@
 const express = require('express');
-const { makeDebtPayment, debtRecordByCustomer } = require('../controllers/debt_controller');
+const { makeDebtPayment, debtRecordByCustomer, removeDebt } = require('../controllers/debt_controller');
 const router=express.Router();
 
 router.post('/makepayment',makeDebtPayment );
 
 //this is the payment record made by customer
-router.get('/debtCustomer/:id',debtRecordByCustomer);
+router.get('/debtCustomer/:custId/:userId',debtRecordByCustomer);
+
+router.delete('/debtRemove/:custId/:debtId/:userId',removeDebt);
 
 module.exports=router;

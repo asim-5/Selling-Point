@@ -76,13 +76,15 @@ const makeDebtPayment = async (req, res) => {
 // this is the payment record
 const debtRecordByCustomer = async (req,res)=>{
     try{
-    const userId=req.params.id;
-    const {custId}=req.body;
+    const userId=req.params.userId;
+    const custId=req.params.custId;
+    console.log(custId,userId);
     if(!userId||!custId){
         res.status(500).send({
             success: false,
             message: 'Please provide all fields'})  
     }
+  
     const [data]= await db.query(`Select * from debtpayments where customer_id = ? and user_id = ?`,[custId,userId]);
     if (data.length === 0) {
         return res.status(404).send({
@@ -92,6 +94,7 @@ const debtRecordByCustomer = async (req,res)=>{
     }
     res.status(200).send({
         success: true,
+        data: data
     });
 
     }
@@ -103,5 +106,92 @@ const debtRecordByCustomer = async (req,res)=>{
     }
 
 }
+const removeDebt = async (req, res) => {
+    const connection = await db.getConnection(); // Get a connection to start the transaction
 
-module.exports = { makeDebtPayment,debtRecordByCustomer };
+    try {
+        const userId = req.params.userId;
+        const customerId = req.params.custId;
+        const debtId = req.params.debtId;
+
+        // Check if all required fields are provided
+        if (!userId || !customerId || !debtId) {
+            return res.status(400).send({
+                success: false,
+                message: 'Please provide all required fields: userId, customerId, and debtId.'
+            });
+        }
+
+        // Start transaction
+        await connection.beginTransaction();
+
+        // Retrieve payment amount to add back to customer debt
+        const [debtRecord] = await connection.query(
+            `SELECT payment_amount FROM debtpayments WHERE customer_id = ? AND user_id = ? AND payment_id = ?`,
+            [customerId, userId, debtId]
+        );
+
+        if (debtRecord.length === 0) {
+            await connection.rollback();
+            return res.status(404).send({
+                success: false,
+                message: 'No record found with the provided details.'
+            });
+        }
+
+        const paymentAmount = debtRecord[0].payment_amount;
+
+        // Update the debt amount in the customer table
+        const [updateResult] = await connection.query(
+            `UPDATE customers SET total_debt = total_debt + ? WHERE customer_id = ? AND user_id = ?`,
+            [paymentAmount, customerId, userId]
+        );
+
+        if (updateResult.affectedRows === 0) {
+            await connection.rollback();
+            return res.status(404).send({
+                success: false,
+                message: 'Customer record not found for updating debt.'
+            });
+        }
+
+        // Execute the delete query
+        const [deleteResult] = await connection.query(
+            `DELETE FROM debtpayments WHERE customer_id = ? AND user_id = ? AND payment_id = ?`,
+            [customerId, userId, debtId]
+        );
+
+        // Check if a record was deleted
+        if (deleteResult.affectedRows === 0) {
+            await connection.rollback();
+            return res.status(404).send({
+                success: false,
+                message: 'No record found to delete with the provided details.'
+            });
+        }
+
+        // Commit the transaction if all queries succeed
+        await connection.commit();
+
+        // Send a success response
+        return res.status(200).send({
+            success: true,
+            message: 'Debt record successfully removed, and amount added back to customer debt.'
+        });
+
+    } catch (err) {
+        // Rollback transaction if an error occurs
+        await connection.rollback();
+        return res.status(500).send({
+            success: false,
+            message: 'An error occurred while removing the debt record.',
+            error: err.message
+        });
+    } finally {
+        // Release the connection back to the pool
+        connection.release();
+    }
+};
+
+
+module.exports = { makeDebtPayment,debtRecordByCustomer, removeDebt };

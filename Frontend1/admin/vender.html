@@ -252,6 +252,7 @@
                   <th>address</th>
                   <th>Debt Detail</th>
                   <th>Purchase Details</th>
+                  <th>Debt Payment</th>
               </tr>
           </thead>
           <tbody id="customerTableBody">
@@ -337,7 +338,7 @@ function renderCustomers() {
             <td>${customer.address}</td>
             <td><a href="vendorDebt.html?id=${customer.id}"><input type="button" value="DETAIL" class="btn btn-info"></a></td>
             <td><a href="vendorPurchase.html?id=${customer.id}"><input type="button" value="DETAIL" class="btn btn-info"></a></td>
-        
+            <td><a href="vendorDebtPayment.html?id=${customer.id}"><input type="button" value="DETAIL" class="btn btn-info"></a></td>
         `;
 
         tableBody.appendChild(row);

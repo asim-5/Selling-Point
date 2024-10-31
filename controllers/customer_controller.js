@@ -309,5 +309,188 @@ const getProductsByCustomer = async (req, res) => {
         });
     }
 };
+const deletePurchase = async (req, res) => {
+    let connection; // Declare the connection variable outside the try block
 
-module.exports={addCustomer,deleteCustomer,getCustomers,searchCustomers,getDebtProductsByCustomer,updateCustomer,getProductsByCustomer}
+    try {
+        const { userId, customerId, purchaseId } = req.params;
+
+        // Check if all required fields are provided
+        if (!userId || !customerId || !purchaseId) {
+            return res.status(400).send({
+                success: false,
+                message: 'User ID, Customer ID, and Purchase ID are required'
+            });
+        }
+
+        // Begin transaction to ensure both tables are updated
+        connection = await db.getConnection(); // Initialize connection
+        await connection.beginTransaction();
+
+        // First, delete items from the purchase_items table associated with the purchase
+        const [deleteItems] = await connection.query(
+            `DELETE FROM purchase_items WHERE purchase_id = ?`,
+            [purchaseId]
+        );
+
+        // Then, delete the purchase record from the purchases table
+        const [deletePurchase] = await connection.query(
+            `DELETE FROM purchases WHERE purchase_id = ? AND user_id = ? AND customer_id = ?`,
+            [purchaseId, userId, customerId]
+        );
+
+        // Check if a record was deleted
+        if (deletePurchase.affectedRows === 0) {
+            await connection.rollback(); // Rollback only if connection exists
+            return res.status(404).send({
+                success: false,
+                message: 'No purchase found with the provided details'
+            });
+        }
+
+        // Commit the transaction if both deletions succeed
+        await connection.commit();
+
+        // Send a success response
+        return res.status(200).send({
+            success: true,
+            message: 'Purchase record successfully deleted'
+        });
+
+    } catch (error) {
+        // Rollback transaction if an error occurs and connection is established
+        if (connection) {
+            await connection.rollback(); // Rollback only if connection exists
+        }
+        console.error(error);
+        return res.status(500).send({
+            success: false,
+            message: 'An error occurred while deleting the purchase record',
+            error: error.message
+        });
+    } finally {
+        // Release the connection back to the pool if it was created
+        if (connection) {
+            connection.release();
+        }
+    }
+};
+const deleteDebtPurchase = async (req, res) => {
+    let connection; // Declare the connection variable outside the try block
+
+    try {
+        const { userId, customerId, purchaseId } = req.params;
+
+        // Check if all required fields are provided
+        if (!userId || !customerId || !purchaseId) {
+            return res.status(400).send({
+                success: false,
+                message: 'User ID, Customer ID, and Purchase ID are required'
+            });
+        }
+
+        // Begin transaction to ensure atomic operations
+        connection = await db.getConnection(); // Initialize connection
+        await connection.beginTransaction();
+
+        // Retrieve the purchase amount from the purchases table
+        const [purchaseRecord] = await connection.query(
+            `SELECT total_price FROM purchases WHERE purchase_id = ? AND user_id = ? AND customer_id = ?`,
+            [purchaseId, userId, customerId]
+        );
+
+        // Check if the purchase exists
+        if (purchaseRecord.length === 0) {
+            await connection.rollback();
+            return res.status(404).send({
+                success: false,
+                message: 'No purchase found with the provided details'
+            });
+        }
+
+        const purchaseAmount = purchaseRecord[0].total_price;
+
+        // Retrieve the customer's current total_debt
+        const [customerRecord] = await connection.query(
+            `SELECT total_debt FROM customers WHERE customer_id = ?`,
+            [customerId]
+        );
+
+        // Check if the customer exists
+        if (customerRecord.length === 0) {
+            await connection.rollback();
+            return res.status(404).send({
+                success: false,
+                message: 'Customer not found'
+            });
+        }
+
+        const currentDebt = customerRecord[0].total_debt;
+        const newDebt = currentDebt - purchaseAmount;
+
+        // Check if the new debt would be negative
+        if (newDebt < 0) {
+            await connection.rollback();
+            return res.status(400).send({
+                success: false,
+                message: 'Total debt cannot go negative'
+            });
+        }
+
+        // Update the total_debt in the customers table
+        await connection.query(
+            `UPDATE customers SET total_debt = ? WHERE customer_id = ?`,
+            [newDebt, customerId]
+        );
+
+        // Delete items from the purchase_items table associated with the purchase
+        await connection.query(
+            `DELETE FROM purchase_items WHERE purchase_id = ?`,
+            [purchaseId]
+        );
+
+        // Delete the purchase record from the purchases table
+        const [deletePurchase] = await connection.query(
+            `DELETE FROM purchases WHERE purchase_id = ? AND user_id = ? AND customer_id = ?`,
+            [purchaseId, userId, customerId]
+        );
+
+        // Confirm deletion was successful
+        if (deletePurchase.affectedRows === 0) {
+            await connection.rollback();
+            return res.status(404).send({
+                success: false,
+                message: 'Failed to delete the purchase record'
+            });
+        }
+
+        // Commit the transaction if all operations succeed
+        await connection.commit();
+
+        // Send a success response
+        return res.status(200).send({
+            success: true,
+            message: 'Purchase record successfully deleted and total debt updated'
+        });
+
+    } catch (error) {
+        // Rollback transaction if an error occurs and connection is established
+        if (connection) {
+            await connection.rollback();
+        }
+        console.error(error);
+        return res.status(500).send({
+            success: false,
+            message: 'An error occurred while deleting the purchase record',
+            error: error.message
+        });
+    } finally {
+        // Release the connection back to the pool if it was created
+        if (connection) {
+            connection.release();
+        }
+    }
+};
+
+
+module.exports={addCustomer,deleteCustomer,getCustomers,searchCustomers,getDebtProductsByCustomer,updateCustomer,getProductsByCustomer,deletePurchase,deleteDebtPurchase}
