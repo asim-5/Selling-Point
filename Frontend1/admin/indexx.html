@@ -91,8 +91,8 @@
                 </div>
             </div>
             <select id="signal" name="signal">
-                <option value=0>Pay</option>
-                <option value=1>Debt</option>
+                <option value=1>Pay</option>
+                <option value=0>Debt</option>
             </select>
             <!-- Save Receipt Button -->
             <button id="save-receipt-button">Save & Print Receipt</button>
@@ -118,7 +118,7 @@
         </div>
     </div>
     <script>
-    const categories = {};
+        const categories = {};
         const billItems = [];
         let currentCustomer = { id: "0", name: "Customer Zero" };
         let currentSale = [];
@@ -177,12 +177,15 @@
     
                         if (productsData.success) {
                             categories[categoryName] = productsData.data.map(product => ({
+                                productId: product.product_id,
                                 name: product.name,
                                 price: product.price,
                                 category: categoryName
                             }));
-    
                             // Add category button
+                            // categories[categoryName].forEach(item => {
+                            //     console.log('Product ID:', item.productId);
+                            // });
                             const button = document.createElement('button');
                             button.className = 'category-btn';
                             button.textContent = categoryName;
@@ -224,7 +227,7 @@
                 productDiv.classList.add('product-item');
                 productDiv.innerHTML = `
                     <span>${product.name}</span>
-                    <button class="product-button" data-name="${product.name}" data-price="${product.price}">Add</button>
+                    <button class="product-button" data-name="${product.name}" data-id="${product.productId}" data-price="${product.price}">Add</button>
                 `;
                 productList.appendChild(productDiv);
             });
@@ -275,7 +278,7 @@
                     productDiv.classList.add('product-item');
                     productDiv.innerHTML = `
                         <span>${product.name}</span>
-                        <button class="product-button" data-name="${product.name}" data-price="${product.price}">Add</button>
+                        <button class="product-button" data-name="${product.name}" data-id="${product.productId}" data-price="${product.price}">Add</button>
                     `;
                     productList.appendChild(productDiv);
                 });
@@ -285,8 +288,10 @@
             productList.addEventListener('click', (e) => {
                 if (e.target.classList.contains('product-button')) {
                     const productName = e.target.getAttribute('data-name');
+                    const productId=e.target.getAttribute('data-id');
+                   // console.log(productId);
                     const productPrice = parseFloat(e.target.getAttribute('data-price'));
-                    const product = { name: productName, price: productPrice };
+                    const product = { name: productName,id:productId, price: productPrice };
                     addToSale(product);
                 }
             });
@@ -340,83 +345,123 @@
                 }
                 updateSaleUI();
             }
-    
+            const signalSelect = document.getElementById('signal');
             // Save and print receipt functionality
-            saveReceiptButton.addEventListener('click', () => {
+             saveReceiptButton.addEventListener('click', async () => {
                 const receiptData = {
-                    customerId: customerIdInput.value,
-                    items: currentSale,
-                    total: totalEl.textContent,
+                    customer_id: customerIdInput.value, // Assuming this is the correct customer ID field
+                    purchase_date: new Date().toISOString().slice(0, 19).replace('T', ' '), // Current date in the required format
+                    total_price: parseFloat(totalEl.textContent.replace('$', '')), // Remove the $ and convert to number
+                    payment_status: signalSelect.value, // Assuming this is the field for payment status
+                    user_id: uid, // Assuming user_id is 1 for now (this can be dynamic if needed)
+                    items: currentSale.map(item => ({
+                        product_id: item.id, // Function to map product name to product ID
+                        price: item.price,
+                        quantity: item.quantity
+                    })),
                 };
-                console.log('Receipt Data:', receiptData);
-                alert('Receipt saved successfully!');
+
+             console.log('Formatted Receipt Data:', receiptData);
+
+                try {
+                    const response = await fetch('http://localhost:5000/api/v1/product/makeTransaction', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(receiptData),
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Failed to save receipt: ${response.statusText}`);
+                    }
+
+                    const result = await response.json();
+                    alert('Receipt saved successfully!');
+                    console.log('API Response:', result);
+                } catch (error) {
+                    console.error('Error saving receipt:', error);
+                    alert('Failed to save receipt. Please try again.');
+                }
+                location.reload();
+
             });
+
     
             // Load categories for user id
             loadCategories(getUserIdFromToken());
+
     
         });
+     
+        function logout() {
+            // Implement logout functionality
+            localStorage.removeItem('token');
+            window.location.href = 'login.html';
+        }
+
+  
         document.addEventListener("DOMContentLoaded", () => {
-    const openModalBtn = document.getElementById("open-modal-btn");
-    const modal = document.getElementById("vendor-modal");
-    const closeModalBtn = document.querySelector(".close-btn");
-    const vendorList = document.getElementById("vendor-list");
-    const vendorIdInput = document.getElementById("vendor-id-input");
-    // const userId = getUserIdFromToken(); // Replace with actual user ID
+            const openModalBtn = document.getElementById("open-modal-btn");
+            const modal = document.getElementById("vendor-modal");
+            const closeModalBtn = document.querySelector(".close-btn");
+            const vendorList = document.getElementById("vendor-list");
+            const vendorIdInput = document.getElementById("vendor-id-input");
+            // const userId = getUserIdFromToken(); // Replace with actual user ID
 
-    // Open modal on button click
-    openModalBtn.addEventListener("click", async () => {
-        modal.style.display = "block";
-        await fetchVendors();
-    });
+            // Open modal on button click
+            openModalBtn.addEventListener("click", async () => {
+                modal.style.display = "block";
+                await fetchVendors();
+            });
 
-    // Close modal on 'X' button click
-    closeModalBtn.addEventListener("click", () => {
-        modal.style.display = "none";
-    });
+            // Close modal on 'X' button click
+            closeModalBtn.addEventListener("click", () => {
+                modal.style.display = "none";
+            });
 
-    // Close modal when clicking outside modal content
-    window.addEventListener("click", (event) => {
-        if (event.target === modal) {
-            modal.style.display = "none";
-        }
-    });
+            // Close modal when clicking outside modal content
+            window.addEventListener("click", (event) => {
+                if (event.target === modal) {
+                    modal.style.display = "none";
+                }
+            });
 
-    // Fetch vendors and populate list
-    async function fetchVendors() {
-        try {
-            const apiUrl = `http://localhost:5000/api/v1/customer/getall/${uid}`;
-            const response = await fetch(apiUrl);
-            const data = await response.json();
-            console.log(data);
-            if (data.success) {
-                vendorList.innerHTML = ""; // Clear previous list items
-                data.data.forEach(vendor => {
-                    const listItem = document.createElement("li");
-                    listItem.textContent = `${vendor.name} (ID: ${vendor.customer_id})`;
-                    listItem.dataset.vendorId = vendor.customer_id;
+            // Fetch vendors and populate list
+            async function fetchVendors() {
+                try {
+                    const apiUrl = `http://localhost:5000/api/v1/customer/getall/${uid}`;
+                    const response = await fetch(apiUrl);
+                    const data = await response.json();
+                    console.log(data);
+                    if (data.success) {
+                        vendorList.innerHTML = ""; // Clear previous list items
+                        data.data.forEach(vendor => {
+                            const listItem = document.createElement("li");
+                            listItem.textContent = `${vendor.name} (ID: ${vendor.customer_id})`;
+                            listItem.dataset.vendorId = vendor.customer_id;
 
-                    // Set vendor ID on list item click
-                    listItem.addEventListener("click", () => {
-                        vendorIdInput.value = listItem.dataset.vendorId;
-                        modal.style.display = "none"; // Close the modal
-                    });
+                            // Set vendor ID on list item click
+                            listItem.addEventListener("click", () => {
+                                vendorIdInput.value = listItem.dataset.vendorId;
+                                modal.style.display = "none"; // Close the modal
+                            });
 
-                    vendorList.appendChild(listItem);
-                });
-            } else {
-                console.error(data.message);
-                vendorList.innerHTML = "<li>No vendors available.</li>";
+                            vendorList.appendChild(listItem);
+                        });
+                    } else {
+                        console.error(data.message);
+                        vendorList.innerHTML = "<li>No vendors available.</li>";
+                    }
+                } catch (error) {
+                    console.error("Error fetching vendor data:", error);
+                    vendorList.innerHTML = "<li>Error loading vendors.</li>";
+                }
             }
-        } catch (error) {
-            console.error("Error fetching vendor data:", error);
-            vendorList.innerHTML = "<li>Error loading vendors.</li>";
-        }
-    }
-});
+        });
 
 
-    </script>
+    </script>>
 
 
   <!-- Bootstrap JS with correct integrity -->

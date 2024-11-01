@@ -101,9 +101,6 @@
             <a class="nav-link active" aria-current="page" href="allcos.html">ALL CUSTOMER</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="customer.html">NEW CUSTOMER</a>
-          </li>
-          <li class="nav-item">
             <a class="nav-link" href="indexx.html">Dashboard</a>
           </li>
           <li class="nav-item"></li>
@@ -136,6 +133,7 @@
                     <th>Email</th>
                     <th>Address</th>
                     <th>Amount due</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody id="customer-info">
@@ -162,7 +160,28 @@
             </tbody>
         </table>
     </div>
+    <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="paymentModalLabel">Enter Payment Amount</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <label for="paymentAmount" class="form-label">Payment Amount</label>
+                    <input type="number" class="form-control" id="paymentAmount" placeholder="Enter amount">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="submitPayment()">Submit Payment</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
+ <!-- Bootstrap JS and dependencies -->
+ <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+ <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"></script>
     <script>
   const token = localStorage.getItem('token'); 
 if(!token){
@@ -240,6 +259,11 @@ function renderCustomerDetails() {
             <td>${customer.email}</td>
             <td>${customer.address}</td>
             <td>${customer.debt}</td>
+            <td>
+                <button class="btn btn-edit" id="insert" style="padding: 10px 20px; min-width: 150px;" data-bs-toggle="modal" data-bs-target="#paymentModal">Make payment</button>
+            </td>
+            
+
         `;
 
         const update = document.getElementById("last_update");
@@ -339,7 +363,46 @@ async function Remove(debtId) {
     }
 }
 
+        async function submitPayment() {
+            const paymentamount = document.getElementById('paymentAmount').value;
 
+            if (!paymentAmount || paymentamount <= 0) {
+                alert("Please enter a valid payment amount.");
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:5000/api/v1/debt/makepayment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ customerId, userId, paymentamount })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    alert("Payment successfully submitted.");
+                    // Optionally refresh the debt records or other UI components
+                    fetchDebtRecords(userId, customerId);
+                    document.getElementById('paymentAmount').value = '';
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('paymentModal'));
+                    modal.hide();
+                } else {
+                    alert(data.message || "Failed to submit payment.");
+
+                }
+            } catch (error) {
+                console.error("Error submitting payment:", error);
+                alert("An error occurred while submitting the payment.");
+            }
+            fetchDebtRecords(userId, customerId);
+            getCustomersList(userId);
+            // Close the modal after payment submission
+            const paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
+            paymentModal.hide();
+        }
     </script>
 </body>
 </html>

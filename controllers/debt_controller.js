@@ -2,9 +2,9 @@ const db = require("../config/db");
 
 const makeDebtPayment = async (req, res) => {
     try {
-        const { customerId, userId, paymentAmount } = req.body;
+        const { customerId, userId, paymentamount } = req.body;
 
-        if (!customerId || !userId || !paymentAmount) {
+        if (!customerId || !userId || !paymentamount) {
             return res.status(400).send({
                 success: false,
                 message: 'Customer ID, User ID, and Payment Amount are required'
@@ -28,8 +28,10 @@ const makeDebtPayment = async (req, res) => {
             });
         }
 
-        const currentTotalDebt = customer[0].total_debt;
-
+        let currentTotalDebt = customer[0].total_debt;
+        let paymentAmount=parseFloat(paymentamount);
+        currentTotalDebt=parseFloat(currentTotalDebt);
+        console.log(paymentAmount,currentTotalDebt);
         if (paymentAmount > currentTotalDebt) {
             await db.query('ROLLBACK');
             return res.status(400).send({
