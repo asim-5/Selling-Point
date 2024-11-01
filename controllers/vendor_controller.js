@@ -277,4 +277,308 @@ const getProductsByVendor = async (req, res) => {
         });
     }
 };
-module.exports={getVendors,addVendor,addSupply,getDebtProductsByVendor,getProductsByVendor}
+
+const debtRecordByVendor = async (req,res)=>{
+    try{
+    const userId=req.params.userId;
+    const vendorId=req.params.vendorId;
+    console.log(vendorId,userId);
+    if(!userId||!vendorId){
+        res.status(500).send({
+            success: false,
+            message: 'Please provide all fields'})  
+    }
+  
+    const [data]= await db.query(`Select * from vendorDebtpayments where vendor_id = ? and user_id = ?`,[vendorId,userId]);
+    if (data.length === 0) {
+        return res.status(404).send({
+            success: false,
+            message: 'No record found'
+        });
+    }
+    res.status(200).send({
+        success: true,
+        data: data
+    });
+
+    }
+    catch(error){
+        res.status(500).send({
+            success: false,
+            message: error
+        })
+    }
+
+}
+const removeVendorDebt = async (req, res) => {
+    let connection;
+
+    try {
+        connection = await db.getConnection(); // Get a connection to start the transaction
+
+        const userId = req.params.userId;
+        const vendorId = req.params.vendorId;
+        const debtId = req.params.debtId;
+
+        // Check if all required fields are provided
+        if (!userId || !vendorId || !debtId) {
+            return res.status(400).send({
+                success: false,
+                message: 'Please provide all required fields: userId, vendorId, and debtId.'
+            });
+        }
+
+        // Start transaction
+        await connection.beginTransaction();
+
+        // Retrieve payment amount to add back to vendor debt
+        const [debtRecord] = await connection.query(
+            `SELECT payment_amount FROM vendorDebtpayments WHERE vendor_id = ? AND user_id = ? AND payment_id = ?`,
+            [vendorId, userId, debtId]
+        );
+
+        if (debtRecord.length === 0) {
+            await connection.rollback();
+            return res.status(404).send({
+                success: false,
+                message: 'No record found with the provided details.'
+            });
+        }
+
+        const paymentAmount = debtRecord[0].payment_amount;
+
+        // Update the debt amount in the vendors table
+        const [updateResult] = await connection.query(
+            `UPDATE vendor SET total_debt = total_debt + ? WHERE vendor_id = ? AND user_id = ?`,
+            [paymentAmount, vendorId, userId]
+        );
+
+        if (updateResult.affectedRows === 0) {
+            await connection.rollback();
+            return res.status(404).send({
+                success: false,
+                message: 'Vendor record not found for updating debt.'
+            });
+        }
+
+        // Execute the delete query in the vendorDebtpayments table
+        const [deleteResult] = await connection.query(
+            `DELETE FROM vendorDebtpayments WHERE vendor_id = ? AND user_id = ? AND payment_id = ?`,
+            [vendorId, userId, debtId]
+        );
+
+        // Check if a record was deleted
+        if (deleteResult.affectedRows === 0) {
+            await connection.rollback();
+            return res.status(404).send({
+                success: false,
+                message: 'No record found to delete with the provided details.'
+            });
+        }
+
+        // Commit the transaction if all queries succeed
+        await connection.commit();
+
+        // Send a success response
+        return res.status(200).send({
+            success: true,
+            message: 'Debt record successfully removed, and amount added back to vendor debt.'
+        });
+
+    } catch (err) {
+        // Rollback transaction if an error occurs
+        if (connection) await connection.rollback();
+        return res.status(500).send({
+            success: false,
+            message: 'An error occurred while removing the debt record.',
+            error: err.message
+        });
+    } finally {
+        // Release the connection back to the pool if it was created
+        if (connection) connection.release();
+    }
+};
+const deleteSupply = async (req, res) => {
+    let connection;
+
+    try {
+        const { userId, vendorId, supplyId } = req.params;
+
+        // Check if all required fields are provided
+        if (!userId || !vendorId || !supplyId) {
+            return res.status(400).send({
+                success: false,
+                message: 'User ID, Vendor ID, and Supply ID are required'
+            });
+        }
+
+        // Begin transaction to ensure both tables are updated
+        connection = await db.getConnection(); // Initialize connection
+        await connection.beginTransaction();
+
+        // First, delete items from the supply_items table associated with the supply
+        const [deleteItems] = await connection.query(
+            `DELETE FROM supply_items WHERE supply_id = ?`,
+            [supplyId]
+        );
+
+        // Then, delete the supply record from the vendor_supply table
+        const [deleteSupply] = await connection.query(
+            `DELETE FROM vendor_supply WHERE supply_id = ? AND user_id = ? AND vendor_id = ?`,
+            [supplyId, userId, vendorId]
+        );
+
+        // Check if a record was deleted
+        if (deleteSupply.affectedRows === 0) {
+            await connection.rollback(); // Rollback only if connection exists
+            return res.status(404).send({
+                success: false,
+                message: 'No supply found with the provided details'
+            });
+        }
+
+        // Commit the transaction if both deletions succeed
+        await connection.commit();
+
+        // Send a success response
+        return res.status(200).send({
+            success: true,
+            message: 'Supply record successfully deleted'
+        });
+
+    } catch (error) {
+        // Rollback transaction if an error occurs and connection is established
+        if (connection) {
+            await connection.rollback(); // Rollback only if connection exists
+        }
+        console.error(error);
+        return res.status(500).send({
+            success: false,
+            message: 'An error occurred while deleting the supply record',
+            error: error.message
+        });
+    } finally {
+        // Release the connection back to the pool if it was created
+        if (connection) {
+            connection.release();
+        }
+    }
+};
+const deleteVendorDebtPurchase = async (req, res) => {
+    let connection;
+
+    try {
+        const { userId, vendorId, purchaseId } = req.params;
+        console.log(userId, vendorId, purchaseId);
+        // Check if all required fields are provided
+        if (!userId || !vendorId || !purchaseId) {
+            return res.status(400).send({
+                success: false,
+                message: 'User ID, Vendor ID, and Purchase ID are required'
+            });
+        }
+
+        // Begin transaction to ensure atomic operations
+        connection = await db.getConnection();
+        await connection.beginTransaction();
+
+        // Retrieve the purchase amount from the vendor_purchases table
+        const [purchaseRecord] = await connection.query(
+            `SELECT total_price FROM vendor_supply WHERE supply_id = ? AND user_id = ? AND vendor_id = ?`,
+            [purchaseId, userId, vendorId]
+        );
+
+        // Check if the purchase exists
+        if (purchaseRecord.length === 0) {
+            await connection.rollback();
+            return res.status(404).send({
+                success: false,
+                message: 'No purchase found with the provided details'
+            });
+        }
+
+        const purchaseAmount = purchaseRecord[0].total_price;
+
+        // Retrieve the vendor's current total_debt
+        const [vendorRecord] = await connection.query(
+            `SELECT total_debt FROM vendor WHERE vendor_id = ?`,
+            [vendorId]
+        );
+
+        // Check if the vendor exists
+        if (vendorRecord.length === 0) {
+            await connection.rollback();
+            return res.status(404).send({
+                success: false,
+                message: 'Vendor not found'
+            });
+        }
+
+        const currentDebt = vendorRecord[0].total_debt;
+        const newDebt = currentDebt - purchaseAmount;
+
+        // Check if the new debt would be negative
+        if (newDebt < 0) {
+            await connection.rollback();
+            return res.status(400).send({
+                success: false,
+                message: 'Total debt cannot go negative'
+            });
+        }
+
+        // Update the total_debt in the vendors table
+        await connection.query(
+            `UPDATE vendor SET total_debt = ? WHERE vendor_id = ?`,
+            [newDebt, vendorId]
+        );
+
+        // Delete items from the supply_items table associated with the purchase
+        await connection.query(
+            `DELETE FROM supply_items WHERE supply_id = ?`,
+            [purchaseId]
+        );
+
+        // Delete the purchase record from the vendor_purchases table
+        const [deletePurchase] = await connection.query(
+            `DELETE FROM vendor_supply WHERE supply_id = ? AND user_id = ? AND vendor_id = ?`,
+            [purchaseId, userId, vendorId]
+        );
+
+        // Confirm deletion was successful
+        if (deletePurchase.affectedRows === 0) {
+            await connection.rollback();
+            return res.status(404).send({
+                success: false,
+                message: 'Failed to delete the purchase record'
+            });
+        }
+
+        // Commit the transaction if all operations succeed
+        await connection.commit();
+
+        // Send a success response
+        return res.status(200).send({
+            success: true,
+            message: 'Vendor purchase record successfully deleted and total debt updated'
+        });
+
+    } catch (error) {
+        // Rollback transaction if an error occurs
+        if (connection) {
+            await connection.rollback();
+        }
+        console.error(error);
+        return res.status(500).send({
+            success: false,
+            message: 'An error occurred while deleting the vendor purchase record',
+            error: error.message
+        });
+    } finally {
+        // Release the connection back to the pool if it was created
+        if (connection) {
+            connection.release();
+        }
+    }
+};
+
+module.exports={getVendors,addVendor,addSupply,getDebtProductsByVendor,getProductsByVendor,debtRecordByVendor,removeVendorDebt,deleteSupply,deleteVendorDebtPurchase}

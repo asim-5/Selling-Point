@@ -259,7 +259,7 @@ function renderCustomerDetails() {
 
 async function fetchDebtRecords(userId, customerId) {
     try {
-        const apiUrl = `http://localhost:5000/api/v1/debt/debtCustomer/${customerId}/${userId}`;
+        const apiUrl = `http://localhost:5000/api/v1/vendor/debtVendor/${customerId}/${userId}`;
         const response = await fetch(apiUrl, {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' },
@@ -269,7 +269,7 @@ async function fetchDebtRecords(userId, customerId) {
         if (data.success) {
             const debtRecords = data.data.map(record => ({
                 debtId: record.payment_id,
-                customerId: record.customer_id,
+                customerId: record.vendor_id,
                 paymentDate: new Date(record.payment_date).toLocaleDateString(),
                 amount: record.payment_amount,
             }));
@@ -319,7 +319,7 @@ async function Remove(debtId) {
         // Exit the function if the user cancels
         return;
     }
-    const apiUrl = `http://localhost:5000/api/v1/debt/debtRemove/${customerId}/${debtId}/${userId}`;
+    const apiUrl = `http://localhost:5000/api/v1/vendor/vendorDebtRemove/${customerId}/${debtId}/${userId}`;
 
     try {
         const response = await fetch(apiUrl, {

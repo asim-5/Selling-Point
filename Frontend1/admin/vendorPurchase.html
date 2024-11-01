@@ -121,7 +121,7 @@
     </div>
   </nav>
 </header>
-    <h2>Customer Data</h2>
+    <h2>Vendor Data</h2>
 
     <div>
         <p style="font-weight: bold; font-size: 16px; color: #333; display: flex; align-items: center; gap: 5px; ">
@@ -153,7 +153,6 @@
                     <th>Purchase date</th>
                     <th>quantity</th>
                     <th>Total Amount</th>
-                    <th>edit</th>
                     <th>delete</th>
                     <th>print</th>
                     
@@ -289,7 +288,7 @@ function renderCustomerDetails() {
 
             if (data.success) {
                 debtProducts = data.data.map(product => ({
-                    purchaseId: product.purchase_id,
+                    purchaseId: product.supply_id,
                     productId: product.product_id,
                     name: product.name,
                     purchaseDate: new Date(product.purchase_date).toLocaleDateString(),
@@ -318,17 +317,16 @@ function renderCustomerDetails() {
                     <td>${product.purchaseDate}</td>
                     <td>${product.quantity}</td>
                     <td>${product.totalPrice}</td>
-                    <td><button class="btn-print" onclick="editProduct()">Edit</button></td>
-                    <td><button class="btn-print" onclick="deleteProduct()">Delete</button></td>
+                    <td><button class="btn-print" onclick="deleteProduct(${product.purchaseId})">Delete</button></td>
                     <td><button class="btn-print" onclick="printPage()">Print</button></td>
                 </tr>
             `;
         });
     }
-
+    const userId = getUserIdFromToken(); 
+    const customerId = getQueryParam('id'); 
     document.addEventListener('DOMContentLoaded', () => {
-        const userId = getUserIdFromToken(); 
-        const customerId = getQueryParam('id'); 
+     
         console.log(customerId);
         fetchDebtProducts(userId, customerId);
     });
@@ -340,8 +338,36 @@ function renderCustomerDetails() {
     }
 
     // Function to delete product (placeholder)
-    function deleteProduct(purchaseId) {
-        console.log(`Delete product with id: ${purchaseId}`);
+    async function deleteProduct(purchaseId) {
+        const confirmDelete = confirm("Are you sure you want to remove this record?");
+    
+    if (!confirmDelete) {
+        // Exit the function if the user cancels
+        return;
+    }
+    const apiUrl = `http://localhost:5000/api/v1/vendor/deleteSupply/${userId}/${customerId}/${purchaseId}`;
+
+    try {
+        const response = await fetch(apiUrl, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            console.log('Debt record successfully removed.');
+            // Optionally, refresh the list of debt records here
+            fetchDebtProducts(userId, customerId);
+        } else {
+            console.error('Error:', data.message);
+        }
+    } catch (error) {
+        console.error('Error while trying to delete debt record:', error);
+    }
+
     }
     
 

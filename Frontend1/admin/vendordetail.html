@@ -215,7 +215,6 @@
                     <td>${loan.totalAmount}</td>
                     <td>${loan.productname}</td>
                     <td>${loan.paymentMethod} - ${loan.paymentMethodDetail}</td>
-                    <td><button class="btn btn-edit" id="editButton">EDIT</button></td>
                     <td><button class="btn-print" onclick="printPage()">Print</button></td>
                     <td><button class="btn btn-print">DELETE</button></td> 
                     
@@ -225,7 +224,7 @@
         document.getElementById('editButton').addEventListener('click', function() {
         window.location.href = 'edit.html';
     });
-    
+    //<td><button class="btn btn-edit" id="editButton">EDIT</button></td>
 
     // Function to print the page
     function printPage() {
