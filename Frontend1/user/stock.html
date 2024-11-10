@@ -214,6 +214,20 @@
 #vendor-list li:hover {
     background-color: #f1f1f1;
 }
+@media print {
+            body * {
+                visibility: hidden;
+            }
+            #printSection, #printSection * {
+                visibility: visible;
+            }
+            #printSection {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
@@ -316,6 +330,7 @@
     <!-- Main Content -->
     <div class="container">
         <h1>Stock Record</h1>
+        <div id="PrintSection">
         <table id="stockTable">
             <thead>
                 <tr>
@@ -331,7 +346,7 @@
                 <!-- Data will be populated by JavaScript -->
             </tbody>
         </table>
-
+    </div>
         <button class="btn-print" onclick="printPage()">Print</button>
     </div>
 
@@ -400,9 +415,11 @@
         }
 
         // Print the page
-        function printPage() {
-            window.print();
-        }
+        // function printPage() {
+        //     window.print();
+            
+
+        // }
 
         // Call the fetchProducts function with the correct user ID when the page loads
         const userId = getUserIdFromToken(); // Replace with actual user ID
@@ -429,7 +446,7 @@
             name: document.getElementById('productName').value,
             price: document.getElementById('price').value,
             description: document.getElementById('description').value,
-            vendor_id: document.getElementById('vendor_id').value,
+            vendor_id: document.getElementById('vendor-id-input').value,
             quantity: document.getElementById('quantity').value,
             category: document.getElementById('category').value,
             arrival_date: document.getElementById('arrivalDate').value,
@@ -471,7 +488,19 @@
 
         // Function to print the page
         function printPage() {
+            const stockContent = document.getElementById('container').innerHTML;
+            const originalContent = document.body.innerHTML;
+            if (!stockContent) {
+                console.error("Error: 'printSection' not found.");
+                return;
+            }
+
+  
+            document.body.innerHTML = stockContent;
+          
             window.print();
+            document.body.innerHTML = originalContent;
+           
         }
         document.addEventListener("DOMContentLoaded", () => {
     const openModalBtn = document.getElementById("open-modal-btn");
