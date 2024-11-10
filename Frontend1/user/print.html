@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Record</title>
+    <style>
+        /* Optional: Add styling here to format the printed content if needed */
+    </style>
+</head>
+<body>
+
+<div id="mainContent">
+    <nav>
+        <!-- Navbar and other sections -->
+        <button onclick="printStockSection()">Print</button>
+    </nav>
+    <h1>Stock Record</h1>
+    <div id="stockSection">
+        <table>
+            <tr><th>Stock Name</th><th>Stock Symbol</th><th>Quantity</th><th>Purchase Price</th><th>Current Price</th><th>Total Value</th></tr>
+            <tr><td>Apple Inc.</td><td>AAPL</td><td>50</td><td>120</td><td>150</td><td>7500</td></tr>
+            <tr><td>Tesla, Inc.</td><td>TSLA</td><td>30</td><td>600</td><td>700</td><td>21000</td></tr>
+            <tr><td>Amazon.com, Inc.</td><td>AMZN</td><td>10</td><td>3000</td><td>3200</td><td>32000</td></tr>
+        </table>
+    </div>
+</div>
+
+<script>
+function printStockSection() {
+    const stockContent = document.getElementById('stockSection').innerHTML;
+    const originalContent = document.body.innerHTML;
+
+    document.body.innerHTML = stockContent;
+    window.print();
+    document.body.innerHTML = originalContent;
+}
+</script>
+
+</body>
+</html>
