@@ -132,7 +132,7 @@
                 <option value=0>Debt</option>
             </select>
             <!-- Save Receipt Button -->
-            <button id="save-receipt-button">Save & Print Receipt</button>
+            <button id="save-receipt-button" onclick="printPage()">Save & Print Receipt</button>
         </div>
 
         <!-- Categories Section -->
@@ -171,6 +171,26 @@
         </div>
       </div>
     <script>
+        //print start
+        function printPage() {
+    const container = document.getElementById("print");
+    if (!container) {
+        console.error("Error: 'container' not found.");
+        return;
+    }
+
+    console.log("Container HTML for print:", container.innerHTML); // Debugging
+
+    const originalContent = document.body.innerHTML; // Save original content
+    document.body.innerHTML = container.innerHTML; // Replace body content
+
+    // Trigger print dialog
+    window.print();
+
+    // Restore content after the print dialog completes
+    document.body.innerHTML = originalContent;
+}
+//print end
         const categories = {};
         const billItems = [];
         let currentCustomer = { id: "0", name: "Customer Zero" };

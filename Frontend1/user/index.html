@@ -26,6 +26,7 @@
         .logout-btn:hover {
             background-color: #c82333;
         }
+        
     </style>
 </head>
 
@@ -59,6 +60,7 @@
     <div class="container">
         <!-- Current Sale Section -->
         <div class="current-sale">
+            <div id="print">
             <h3>Current Sale</h3>
             <ul id="sale-items"></ul>
             <p>Sub-total: <span id="sub-total">$0.00</span></p>
@@ -68,9 +70,10 @@
             <div class="vendor-id">
                 <label for="vendor-id-input">Customer ID:</label>
                 <button id="open-modal-btn">Select Customer</button>
-                <input type="text" id="vendor-id-input" placeholder="Customer ID" readonly>
+                <input type="text" id="vendor-id-input" placeholder="Customer ID" >
+
             </div>
-            
+            </div>
             <!-- Modal structure -->
             <div id="vendor-modal" class="modal">
                 <div class="modal-content">
@@ -84,7 +87,8 @@
                 <option value=0>Debt</option>
             </select>
             <!-- Save Receipt Button -->
-            <button id="save-receipt-button">Save & Print Receipt</button>
+            <button id="save-receipt-button" onclick="printPage()">Save & Print Receipt</button>
+            
         </div>
 
         <!-- Categories Section -->
@@ -123,6 +127,27 @@
         </div>
       </div>
     <script>
+        // Function to print the page
+        function printPage() {
+    const container = document.getElementById("print");
+    if (!container) {
+        console.error("Error: 'container' not found.");
+        return;
+    }
+
+    console.log("Container HTML for print:", container.innerHTML); // Debugging
+
+    const originalContent = document.body.innerHTML; // Save original content
+    document.body.innerHTML = container.innerHTML; // Replace body content
+
+    // Trigger print dialog
+    window.print();
+
+    // Restore content after the print dialog completes
+    document.body.innerHTML = originalContent;
+}
+
+//print end
         const categories = {};
         const billItems = [];
         let currentCustomer = { id: "0", name: "Customer Zero" };
@@ -167,39 +192,42 @@
     
                     // Fetch products by category
                     for (const category of data.data) {
-                        const categoryName = category.category;
-                        const encodedCategoryName = encodeURIComponent(categoryName);
-    
-                        // Fetch products for each category
-                        const productsResponse = await fetch(`http://localhost:5000/api/v1/product/ProductByCategory/${userId}?categoryName=${encodedCategoryName}`, {
-                            method: 'GET',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            }
-                        });
-    
-                        const productsData = await productsResponse.json();
-    
-                        if (productsData.success) {
-                            categories[categoryName] = productsData.data.map(product => ({
-                                productId: product.product_id,
-                                name: product.name,
-                                price: product.price,
-                                category: categoryName
-                            }));
-                            // Add category button
-                            // categories[categoryName].forEach(item => {
-                            //     console.log('Product ID:', item.productId);
-                            // });
-                            const button = document.createElement('button');
-                            button.className = 'category-btn';
-                            button.textContent = categoryName;
-                            button.onclick = () => displayProducts(categoryName);
-                            categoryButtonsContainer.appendChild(button);
-                        } else {
-                            console.error(`No products found for category: ${categoryName}`);
+                    const categoryName = category.category;
+                    const encodedCategoryName = encodeURIComponent(categoryName);
+
+                    // Fetch products for each category
+                    const productsResponse = await fetch(`http://localhost:5000/api/v1/product/ProductByCategory/${userId}?categoryName=${encodedCategoryName}`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
                         }
+                    });
+
+                    const productsData = await productsResponse.json();
+
+                    if (productsData.success) {
+                        // Filter out products with quantity 0
+                        const filteredProducts = productsData.data.filter(product => product.quantity > 0);
+
+                        // Map filtered products
+                        categories[categoryName] = filteredProducts.map(product => ({
+                            productId: product.product_id,
+                            name: product.name,
+                            price: product.price,
+                            category: categoryName
+                        }));
+
+                        // Add category button
+                        const button = document.createElement('button');
+                        button.className = 'category-btn';
+                        button.textContent = categoryName;
+                        button.onclick = () => displayProducts(categoryName);
+                        categoryButtonsContainer.appendChild(button);
+                    } else {
+                        console.error(`No products found for category: ${categoryName}`);
                     }
+                }
+
     
                     // Optionally, display the default or first category
                     if (data.data.length > 0) {
@@ -232,7 +260,9 @@
                 productDiv.classList.add('product-item');
                 productDiv.innerHTML = `
                     <span>${product.name}</span>
+                     <span>${product.price}</span>
                     <button class="product-button" data-name="${product.name}" data-id="${product.productId}" data-price="${product.price}">Add</button>
+                   
                 `;
                 productList.appendChild(productDiv);
             });
@@ -283,6 +313,7 @@
                     productDiv.classList.add('product-item');
                     productDiv.innerHTML = `
                         <span>${product.name}</span>
+                          <span>${product.price}</span>
                         <button class="product-button" data-name="${product.name}" data-id="${product.productId}" data-price="${product.price}">Add</button>
                     `;
                     productList.appendChild(productDiv);
@@ -350,6 +381,7 @@
                 }
                 updateSaleUI();
             }
+              
             const signalSelect = document.getElementById('signal');
             // Save and print receipt functionality
              saveReceiptButton.addEventListener('click', async () => {
