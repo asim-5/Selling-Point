@@ -87,7 +87,8 @@
                 <option value=0>Debt</option>
             </select>
             <!-- Save Receipt Button -->
-            <button id="save-receipt-button" onclick="printPage()">Save & Print Receipt</button>
+            <button id="save-receipt-button" >Save  Receipt</button>
+            <button id="print-receipt-button" onclick="printPage()"> Print Receipt</button>
             
         </div>
 
@@ -140,13 +141,13 @@
     const originalContent = document.body.innerHTML; // Save original content
     document.body.innerHTML = container.innerHTML; // Replace body content
 
-    // Trigger print dialog
-    window.print();
-
-    // Restore content after the print dialog completes
-    document.body.innerHTML = originalContent;
-}
-
+    // Wait for DOM update before triggering print
+    setTimeout(() => {
+        window.print(); // Open print dialog
+        document.body.innerHTML = originalContent; // Restore content
+        location.reload(); // Optional: Reload to restore state
+    }, 200); // Slight delay ensures rendering
+    }
 //print end
         const categories = {};
         const billItems = [];
