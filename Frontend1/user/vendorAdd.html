@@ -111,6 +111,7 @@
             <ul id="sale-items"></ul>
             <p>Sub-total: <span id="sub-total">$0.00</span></p>
             <p>Tax (NZ GST): <span id="tax">$0.00</span></p>
+            <p><b>Total Discount:<span id="totalDiscountEl"> $0.00</span></b></p>
             <p><b>TOTAL: <span id="total">$0.00</span></b></p>
             <!-- Customer ID Input -->
             <div class="vendor-id">
@@ -132,7 +133,7 @@
                 <option value=0>Debt</option>
             </select>
             <!-- Save Receipt Button -->
-            <button id="save-receipt-button" onclick="printPage()">Save & Print Receipt</button>
+            <button id="save-receipt-button" onclick="prinPage()">Save & Print Receipt</button>
         </div>
 
         <!-- Categories Section -->
@@ -170,9 +171,44 @@
           </div>
         </div>
       </div>
+      <div id="paymentModal" class="modal">
+        <div class="modal-content">
+            <h3>Select Payment Option</h3>
+            <form id="paymentForm">
+                <div class="payment-option">
+                    <label>
+                        <input type="radio" name="paymentOption" value="Cash" /> Cash
+                    </label>
+                </div>
+                <div class="payment-option">
+                    <label>
+                        <input type="radio" name="paymentOption" value="Cheque" /> Cheque
+                    </label>
+                    <div id="chequeInput" class="conditional-input">
+                        <label for="chequeNumber">Cheque Number:</label>
+                        <input type="text" id="chequeNumber" />
+                    </div>
+                </div>
+                <div class="payment-option">
+                    <label>
+                        <input type="radio" name="paymentOption" value="Exchange" /> Exchange
+                    </label>
+                    <div id="exchangeInput" class="conditional-input">
+                        <label for="exchangeDetails">Exchange Details:</label>
+                        <textarea id="exchangeDetails" rows="4"></textarea>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" id="confirmPaymentButton" class="btn btn-confirm">Confirm</button>
+                    <button type="button" id="closeModalButton" class="btn btn-cancel">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div id="overlay" class="overlay"></div>
     <script>
-        //print start
-        function printPage() {
+         //print start
+         function printPage() {
     const container = document.getElementById("print");
     if (!container) {
         console.error("Error: 'container' not found.");
@@ -314,8 +350,9 @@
             const totalEl = document.getElementById('total');
             const searchInput = document.getElementById('product-search');
             const categoryButtonsContainer = document.getElementById('categoryButtons');
-            const customerIdInput = document.getElementById('customer-id-input');
+            const customerIdInput = document.getElementById('vendor-id-input');
             const saveReceiptButton = document.getElementById('save-receipt-button');
+            const total_discount= document.getElementById('totalDiscountEl');
     
             // Filter products by category and search term
             function filterProducts(category, searchTerm = '') {
@@ -382,30 +419,57 @@
     
             // Function to update the sale UI and calculate totals
             function updateSaleUI() {
-                saleItems.innerHTML = '';
-                let subTotal = 0;
-    
-                currentSale.forEach(item => {
-                    const listItem = document.createElement('li');
-                    listItem.textContent = `${item.name} - $${item.price.toFixed(2)} x ${item.quantity}`;
-                    
-                    // Create a button to decrease quantity
-                    const decreaseButton = document.createElement('button');
-                    decreaseButton.textContent = '-';
-                    decreaseButton.onclick = () => decreaseQuantity(item);
-                    
-                    // Append button to list item
-                    listItem.appendChild(decreaseButton);
-                    saleItems.appendChild(listItem);
-                    
-                    subTotal += item.price * item.quantity;
-                });
-    
-                subTotalEl.textContent = `$${subTotal.toFixed(2)}`;
-                const tax = subTotal * taxRate;
-                taxEl.textContent = `$${tax.toFixed(2)}`;
-                totalEl.textContent = `$${(subTotal + tax).toFixed(2)}`;
-            }
+    saleItems.innerHTML = '';
+    let subTotal = 0;
+    let totalDiscount = 0;
+
+    currentSale.forEach(item => {
+        const listItem = document.createElement('li');
+        
+        // Display item details
+        listItem.textContent = `${item.name} - $${item.price.toFixed(2)} x ${item.quantity}`;
+        
+        // Create a discount input field
+        const discountInput = document.createElement('input');
+        discountInput.type = 'number';
+        discountInput.placeholder = 'Discount';
+        discountInput.value = item.discount || 0; // Default discount value
+        discountInput.style.marginLeft = '10px';
+        discountInput.onchange = () => {
+            const discountValue = parseFloat(discountInput.value) || 0;
+            item.discount = discountValue; // Save discount for the item
+            updateSaleUI(); // Recalculate totals and update UI
+        };
+
+        // Create a button to decrease quantity
+        const decreaseButton = document.createElement('button');
+        decreaseButton.textContent = '-';
+        decreaseButton.onclick = () => {
+            decreaseQuantity(item);
+            updateSaleUI(); // Update UI after quantity change
+        };
+
+        // Append elements to the list item
+        listItem.appendChild(discountInput);
+        listItem.appendChild(decreaseButton);
+        saleItems.appendChild(listItem);
+
+        // Calculate discounted price for the item
+        const effectivePrice = item.price - (item.discount || 0);
+        const itemTotal = Math.max(0, effectivePrice) * item.quantity; // Ensure price is not negative
+        subTotal += itemTotal;
+
+        // Add discount for this item to total discount (only once, not per quantity)
+        totalDiscount += item.discount || 0;
+    });
+
+    // Update subtotal, tax, total, and total discount
+    subTotalEl.textContent = `${subTotal.toFixed(2)}`;
+    const tax = subTotal * taxRate;
+    taxEl.textContent = `${tax.toFixed(2)}`;
+    totalEl.textContent = `${(subTotal + tax).toFixed(2)}`;
+    totalDiscountEl.textContent = `${totalDiscount.toFixed(2)}`; // Update total discount field
+}
     
             // Function to decrease quantity
             function decreaseQuantity(item) {
@@ -420,45 +484,86 @@
             }
             const signalSelect = document.getElementById('signal');
             // Save and print receipt functionality
-             saveReceiptButton.addEventListener('click', async () => {
+            confirmPaymentButton.addEventListener('click', async () => {
+        // Get selected payment option
+                const selectedOption = document.querySelector('input[name="paymentOption"]:checked');
+
+                if (!selectedOption) {
+                    alert('Please select a payment option');
+                    return;
+                }
+
+                if (selectedOption.value === "Cash") {
+                    paymentDetails = "Cash";
+                } else if (selectedOption.value === "Cheque") {
+                    const chequeNumber = chequeNumberInput.value.trim();
+                    if (!chequeNumber) {
+                        alert('Please enter a cheque number');
+                        return;
+                    }
+                    paymentDetails = chequeNumber;
+                } else if (selectedOption.value === "Exchange") {
+                    const exchangeDetails = exchangeDetailsInput.value.trim();
+                    if (!exchangeDetails) {
+                        alert('Please enter exchange details');
+                        return;
+                    }
+                    // paymentDetails = `Exchange: ${exchangeDetails}`;
+                    paymentDetails=exchangeDetails;
+                }
+
+                // Close the modal
+                paymentModal.style.display = 'none';
+                overlay.style.display = 'none';
+
+                // Prepare receipt data
                 const receiptData = {
                     vendor_id: customerIdInput.value, // Assuming this is the correct customer ID field
                     purchase_date: new Date().toISOString().slice(0, 19).replace('T', ' '), // Current date in the required format
                     total_price: parseFloat(totalEl.textContent.replace('$', '')), // Remove the $ and convert to number
                     payment_status: signalSelect.value, // Assuming this is the field for payment status
                     user_id: uid, // Assuming user_id is 1 for now (this can be dynamic if needed)
+                    payment_details: paymentDetails, // Add payment details here
                     items: currentSale.map(item => ({
                         product_id: item.id, // Function to map product name to product ID
                         price: item.price,
                         quantity: item.quantity
                     })),
+                    discount: parseFloat(total_discount.textContent.replace('$', ''))
                 };
 
-             console.log('Formatted Receipt Data:', receiptData);
-             try {
-                    const response = await fetch('http://localhost:5000/api/v1/vendor/addSupply', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(receiptData),
-                    });
+                console.log('Formatted Receipt Data:', receiptData);
+                // console.log(total_discount);
+                // try {
+                //     const response = await fetch('http://localhost:5000/api/v1/product/makeTransaction', {
+                //         method: 'POST',
+                //         headers: {
+                //             'Content-Type': 'application/json',
+                //         },
+                //         body: JSON.stringify(receiptData),
+                //     });
 
-                    if (!response.ok) {
-                        throw new Error(`Failed to save receipt: ${response.statusText}`);
-                    }
+                //     if (!response.ok) {
+                //         throw new Error(`Failed to save receipt: ${response.statusText}`);
+                //     }
 
-                    const result = await response.json();
-                    alert('Receipt saved successfully!');
-                    console.log('API Response:', result);
-                } catch (error) {
-                    console.error('Error saving receipt:', error);
-                    alert('Failed to save receipt. Please try again.');
-                }
+                //     const result = await response.json();
+                //     alert('Receipt saved successfully!');
+                //     console.log('API Response:', result);
+                // } catch (error) {
+                //     console.error('Error saving receipt:', error);
+                //     alert('Failed to save receipt. Please try again.');
+                // }
 
-               
+                // location.reload();
+
+                printPage()
             });
 
+        closeModalButton.addEventListener('click', () => {
+            paymentModal.style.display = 'none';
+            overlay.style.display = 'none';
+        });
     
             // Load categories for user id
             loadCategories(getUserIdFromToken());
@@ -475,7 +580,7 @@
     const modal = document.getElementById("vendor-modal");
     const closeModalBtn = document.querySelector(".close-btn");
     const vendorList = document.getElementById("vendor-list");
-    const vendorIdInput = document.getElementById("customer-id-input");
+    const vendorIdInput = document.getElementById("vendor-id-input");
     const userId = 'yourUserId'; // Replace with actual user ID
 
     // Open modal on button click
