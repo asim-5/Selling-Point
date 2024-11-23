@@ -14,6 +14,7 @@ body {
     padding: 20px;
     max-width: 1200px;
     margin: 0 auto;
+    
 }
 
 h3 {
@@ -27,7 +28,8 @@ h3 {
     border-radius: 8px;
     box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
     padding: 20px;
-    width: 35%;
+    width: 50%;
+    margin-right: 20px;
 }
 
 .current-sale ul {
@@ -91,7 +93,28 @@ h3 {
     margin-top: 20px;
     width: 100%;
 }
-
+#print-receipt-button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-top: 20px;
+    width: 100%;
+}
+#open-modal-btn{
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-top: 20px;
+    width: 100%;
+}
 #save-receipt-button:hover {
     background-color: #45a049;
 }
@@ -104,12 +127,60 @@ h3 {
     border-radius: 8px;
     margin-bottom: 10px;
 }
+/* customer selection */
+/* Style for the select dropdown */
+#signal {
+    width: 150px; /* Adjust width as needed */
+    padding: 10px;
+    font-size: 16px;
+    color: #333; /* Text color */
+    background-color: #f9f9f9; /* Background color */
+    border: 1px solid #ccc; /* Border style */
+    border-radius: 5px; /* Rounded corners */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+    cursor: pointer;
+    appearance: none; /* Remove default browser styling */
+    outline: none; /* Remove focus outline */
+}
 
+/* Add hover effect */
+
+#signal:hover {
+    background-color: #e6e6e6; /* Slightly darker background on hover */
+    border-color: #999; /* Darker border */
+    
+}
+
+/* Add focus effect */
+#signal:focus {
+    border-color: #0078d4; /* Highlight border on focus */
+    box-shadow: 0 0 5px rgba(0, 120, 212, 0.5); /* Focus shadow */
+}
+
+/* Style for the option items */
+#signal option {
+    padding: 10px;
+    font-size: 16px;
+    color: #333; /* Text color */
+    background-color: #fff; /* Option background */
+}
+
+/* Example for specific option styling */
+#signal option[value="1"] {
+    color: green; /* Pay option in green */
+}
+
+#signal option[value="0"] {
+    color: red; /* Debt option in red */
+}
+
+/* customer selection end */
 /* Search Bar */
 .search-bar {
-    width: 60%;
+    width: 65%;
     margin: 0 auto;
     margin-bottom: 20px;
+    margin-right: 20%;
 }
 
 #product-search {
@@ -119,24 +190,40 @@ h3 {
     border-radius: 8px;
     font-size: 1rem;
 }
-
+#vendor-id-input{
+    margin-top: 5px;
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+/* Categories Section */
 /* Categories Section */
 .categories {
     background-color: #fff;
     border-radius: 8px;
     box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
     padding: 20px;
-    width: 60%;
+    width: 100%;
+    margin-right: 20px;
+    flex-basis: auto;
+}
+
+.categories h1 {
+    margin-left: 20%;
 }
 
 .category-buttons {
     display: flex;
-    justify-content: space-between;
-    margin-bottom: 20px;
+    flex-wrap: wrap; /* Allow buttons to wrap */
+    justify-content: flex-start; /* Align buttons to the left */
+    gap: 10px; /* Add space between buttons */
+    margin-bottom: 20px; /* Space below the container */
 }
 
 .category-buttons button {
-    background-color: #007BFF;
+    background-color: #1c8f0d;
     color: white;
     padding: 10px;
     border: none;
@@ -159,22 +246,51 @@ h3 {
 }
 
 /* Products Section */
+/* Product Section Styling */
 .products {
     background-color: #fff;
     border-radius: 8px;
     box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
     padding: 20px;
-    width: 60%;
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
 }
 
+/* Product Section Title */
+.products h2 {
+    text-align: center;
+    font-size: 1.5rem;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+/* Individual Product Item Styling */
 .product-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding: 10px 15px;
     margin-bottom: 15px;
-    font-size: 1.1rem;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    transition: box-shadow 0.3s ease;
 }
 
+.product-item:hover {
+    box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Product Name Styling */
+.product-item span {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: #333;
+    flex: 1;
+}
+
+/* Button Styling */
 .product-item button {
     background-color: #4CAF50;
     color: white;
@@ -183,11 +299,32 @@ h3 {
     border-radius: 8px;
     font-size: 1rem;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .product-item button:hover {
     background-color: #45a049;
+    transform: translateY(-2px);
+}
+
+.product-item button:active {
+    transform: translateY(0);
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+    .product-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .product-item span {
+        margin-bottom: 10px;
+    }
+
+    .product-item button {
+        align-self: flex-end;
+    }
 }
 
 /* Responsive Design */
@@ -269,3 +406,5 @@ h3 {
         #vendor-list li:hover {
             background-color: #f1f1f1;
         }
+
+        
