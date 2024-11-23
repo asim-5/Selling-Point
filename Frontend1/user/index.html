@@ -621,39 +621,40 @@
                     total_price: parseFloat(totalEl.textContent.replace('$', '')), // Remove the $ and convert to number
                     payment_status: signalSelect.value, // Assuming this is the field for payment status
                     user_id: uid, // Assuming user_id is 1 for now (this can be dynamic if needed)
-                    payment_details: paymentDetails, // Add payment details here
+                     // Add payment details here
                     items: currentSale.map(item => ({
                         product_id: item.id, // Function to map product name to product ID
                         price: item.price,
                         quantity: item.quantity
                     })),
+                    payment_detail: paymentDetails,
                     discount: parseFloat(total_discount.textContent.replace('$', ''))
                 };
 
                 console.log('Formatted Receipt Data:', receiptData);
                 // console.log(total_discount);
-                // try {
-                //     const response = await fetch('http://localhost:5000/api/v1/product/makeTransaction', {
-                //         method: 'POST',
-                //         headers: {
-                //             'Content-Type': 'application/json',
-                //         },
-                //         body: JSON.stringify(receiptData),
-                //     });
+                try {
+                    const response = await fetch('http://localhost:5000/api/v1/product/makeTransaction', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(receiptData),
+                    });
 
-                //     if (!response.ok) {
-                //         throw new Error(`Failed to save receipt: ${response.statusText}`);
-                //     }
+                    if (!response.ok) {
+                        throw new Error(`Failed to save receipt: ${response.statusText}`);
+                    }
 
-                //     const result = await response.json();
-                //     alert('Receipt saved successfully!');
-                //     console.log('API Response:', result);
-                // } catch (error) {
-                //     console.error('Error saving receipt:', error);
-                //     alert('Failed to save receipt. Please try again.');
-                // }
+                    const result = await response.json();
+                    alert('Receipt saved successfully!');
+                    console.log('API Response:', result);
+                } catch (error) {
+                    console.error('Error saving receipt:', error);
+                    alert('Failed to save receipt. Please try again.');
+                }
 
-                // location.reload();
+                location.reload();
 
                 printPage()
             });

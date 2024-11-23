@@ -74,6 +74,88 @@
 #vendor-list li:hover {
     background-color: #f1f1f1;
 }
+.modal {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1000;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        width: 500px;
+        padding: 20px;
+        height: 700px;
+        background: rgba(255, 255, 255, 0);
+       
+
+    }
+
+    .modal-content {
+        text-align: center;
+    }
+
+    .modal h3 {
+        margin-bottom: 20px;
+    }
+
+    .payment-option {
+        margin-bottom: 15px;
+        text-align: left;
+    }
+
+    .conditional-input {
+        display: none;
+        margin-top: 10px;
+    }
+
+    .modal-actions {
+        margin-top: 20px;
+    }
+
+    .btn {
+        padding: 10px 20px;
+        margin: 5px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .btn-confirm {
+        background-color: #4CAF50;
+        color: white;
+    }
+
+    .btn-cancel {
+        background-color: #f44336;
+        color: white;
+    }
+    #exchangeDetails {
+    resize: none; /* Prevent resizing if you want a fixed height */
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    width: 100%;
+    height: 200px;
+}
+    #chequeNumber{
+        width: 100%;
+        height: 50px;
+    }
+    /* Overlay Styling */
+    .overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+    }
 
     </style>
 </head>
@@ -133,7 +215,7 @@
                 <option value=0>Debt</option>
             </select>
             <!-- Save Receipt Button -->
-            <button id="save-receipt-button" onclick="prinPage()">Save & Print Receipt</button>
+            <button id="save-receipt-button" >Save & Print Receipt</button>
         </div>
 
         <!-- Categories Section -->
@@ -484,6 +566,37 @@
             }
             const signalSelect = document.getElementById('signal');
             // Save and print receipt functionality
+            const paymentModal = document.getElementById('paymentModal');
+            const overlay = document.getElementById('overlay');
+            const confirmPaymentButton = document.getElementById('confirmPaymentButton');
+            const closeModalButton = document.getElementById('closeModalButton');
+            const chequeInput = document.getElementById('chequeInput');
+            const exchangeInput = document.getElementById('exchangeInput');
+            const chequeNumberInput = document.getElementById('chequeNumber');
+            const exchangeDetailsInput = document.getElementById('exchangeDetails');
+
+            let paymentDetails = ""; // This will store the payment details
+
+            saveReceiptButton.addEventListener('click', () => {
+        // Open the modal
+                paymentModal.style.display = 'block';
+                overlay.style.display = 'block';
+            })
+
+        document.querySelectorAll('input[name="paymentOption"]').forEach(option => {
+        option.addEventListener('change', () => {
+            if (option.value === "Cheque") {
+                chequeInput.style.display = 'block';
+                exchangeInput.style.display = 'none';
+            } else if (option.value === "Exchange") {
+                chequeInput.style.display = 'none';
+                exchangeInput.style.display = 'block';
+            } else {
+                chequeInput.style.display = 'none';
+                exchangeInput.style.display = 'none';
+            }
+        });
+    });
             confirmPaymentButton.addEventListener('click', async () => {
         // Get selected payment option
                 const selectedOption = document.querySelector('input[name="paymentOption"]:checked');
@@ -523,41 +636,42 @@
                     total_price: parseFloat(totalEl.textContent.replace('$', '')), // Remove the $ and convert to number
                     payment_status: signalSelect.value, // Assuming this is the field for payment status
                     user_id: uid, // Assuming user_id is 1 for now (this can be dynamic if needed)
-                    payment_details: paymentDetails, // Add payment details here
+                     // Add payment details here
                     items: currentSale.map(item => ({
                         product_id: item.id, // Function to map product name to product ID
                         price: item.price,
                         quantity: item.quantity
                     })),
+                    payment_details: paymentDetails,
                     discount: parseFloat(total_discount.textContent.replace('$', ''))
                 };
 
                 console.log('Formatted Receipt Data:', receiptData);
                 // console.log(total_discount);
-                // try {
-                //     const response = await fetch('http://localhost:5000/api/v1/product/makeTransaction', {
-                //         method: 'POST',
-                //         headers: {
-                //             'Content-Type': 'application/json',
-                //         },
-                //         body: JSON.stringify(receiptData),
-                //     });
+                try {
+                    const response = await fetch('http://localhost:5000/api/v1/vendor/addSupply ', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(receiptData),
+                    });
 
-                //     if (!response.ok) {
-                //         throw new Error(`Failed to save receipt: ${response.statusText}`);
-                //     }
+                    if (!response.ok) {
+                        throw new Error(`Failed to save receipt: ${response.statusText}`);
+                    }
 
-                //     const result = await response.json();
-                //     alert('Receipt saved successfully!');
-                //     console.log('API Response:', result);
-                // } catch (error) {
-                //     console.error('Error saving receipt:', error);
-                //     alert('Failed to save receipt. Please try again.');
-                // }
+                    const result = await response.json();
+                    alert('Receipt saved successfully!');
+                    console.log('API Response:', result);
+                } catch (error) {
+                    console.error('Error saving receipt:', error);
+                    alert('Failed to save receipt. Please try again.');
+                }
 
-                // location.reload();
+                location.reload();
 
-                printPage()
+                
             });
 
         closeModalButton.addEventListener('click', () => {

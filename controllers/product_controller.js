@@ -415,11 +415,11 @@ const updateDebtPurchaseProducts = async (req, res) => {
 const makeTransaction = async (req, res) => {
     const connection = await db.getConnection(); // To handle the transaction
     try {
-        const { customer_id, purchase_date, total_price, payment_status, items, user_id } = req.body;
-        console.log(customer_id, purchase_date, total_price, payment_status, items, user_id);
+        const { customer_id, purchase_date, total_price, payment_status, items, user_id, payment_detail, discount } = req.body;
+        console.log(customer_id, purchase_date, total_price, payment_status, items, user_id, payment_detail, discount);
 
         // Validate request body
-        if (!customer_id || !purchase_date || !total_price || !items || !user_id) {
+        if (!customer_id || !purchase_date || !total_price || !items || !user_id || payment_detail === undefined || discount === undefined) {
             return res.status(400).json({
                 success: false,
                 message: "Please provide all required fields."
@@ -428,12 +428,13 @@ const makeTransaction = async (req, res) => {
 
         // Begin transaction
         await connection.beginTransaction();
-        const quantity=1;
-        const product_id=1;
+        const quantity = 1;
+        const product_id = 1;
+
         // Insert into the `purchases` table
         const [purchaseResult] = await connection.query(
-            'INSERT INTO purchases (customer_id, product_id, purchase_date, quantity, total_price, payment_status, user_id) VALUES (?, ? ,?, ?, ?, ?, ?)',
-            [customer_id, product_id, purchase_date, quantity, total_price, payment_status, user_id]
+            'INSERT INTO purchases (customer_id, product_id, purchase_date, quantity, total_price, payment_status, user_id, payment_option, discount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [customer_id, product_id, purchase_date, quantity, total_price, payment_status, user_id, payment_detail, discount]
         );
 
         const purchase_id = purchaseResult.insertId; // Get the generated purchase_id
@@ -456,7 +457,6 @@ const makeTransaction = async (req, res) => {
             const availableQuantity = productResult[0]?.quantity;
 
             if (!availableQuantity || availableQuantity < quantity) {
-                console.log("hello");
                 await connection.rollback(); // Rollback transaction
                 return res.status(400).json({
                     success: false,
@@ -509,6 +509,7 @@ const makeTransaction = async (req, res) => {
         connection.release(); // Release the connection
     }
 };
+
 
 
 

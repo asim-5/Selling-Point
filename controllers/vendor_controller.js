@@ -67,7 +67,7 @@ const addVendor=async(req,res)=>{
 const addSupply = async (req, res) => {
     const connection = await db.getConnection(); // To handle the transaction
     try {
-        const { vendor_id, purchase_date, total_price, payment_status, user_id, items  } = req.body;
+        const { vendor_id, purchase_date, total_price, payment_status, user_id, items,discount,payment_details  } = req.body;
         console.log(vendor_id, purchase_date, total_price, payment_status, items, user_id);
 
         // Validate request body
@@ -84,8 +84,8 @@ const addSupply = async (req, res) => {
         const product_id=1;
         // Insert into the `purchases` table
         const [purchaseResult] = await connection.query(
-            'INSERT INTO vendor_supply ( purchase_date, total_price, payment_status, user_id, vendor_id) VALUES (?, ? ,?, ?, ?)',
-            [ purchase_date, total_price, payment_status, user_id, vendor_id]
+            'INSERT INTO vendor_supply ( purchase_date, total_price, payment_status, user_id, vendor_id,payment_option,discount) VALUES (?, ? ,?, ?, ?,?,?)',
+            [ purchase_date, total_price, payment_status, user_id, vendor_id,payment_details,discount]
         );
 
         const purchase_id = purchaseResult.insertId; // Get the generated purchase_id
