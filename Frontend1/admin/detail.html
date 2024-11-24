@@ -117,7 +117,8 @@
                 <th>Purchase Date</th>
                 <th>Quantity</th>
                 <th>Total Price</th>
-                <th>Edit</th>
+                <th>Payment Desription</th>
+                <th>Discount</th>
                 <th>Print</th>
                 <th>Delete</th>
             </tr>
@@ -226,6 +227,8 @@
                     totalPrice: product.total_price,
                     payment: product.payment_status,
                     customer_Id: customerId,
+                    payment_option: product.payment_option,
+                    discount: product.discount
                 }));
                 renderDebtProducts();
             } else {
@@ -247,10 +250,9 @@
                     <td>${product.purchaseDate}</td>
                     <td>${product.quantity}</td>
                     <td>${product.totalPrice}</td>
-                     <td>${product.payment}</td>
-              
-                    
-                    <td><button class="btn-print" onclick="printPage()">Print</button></td>
+                     <td>${product.payment_option}</td>
+                    <td>${product.discount}</td>
+                     <td><button class="btn-print" onclick="printPage()">Print</button></td>
                     <td><button class="btn btn-print" onclick="deleteProduct(${product.purchaseId})">DELETE</button></td>
                 </tr>
             `;

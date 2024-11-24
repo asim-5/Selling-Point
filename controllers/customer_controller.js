@@ -213,6 +213,8 @@ const getDebtProductsByCustomer = async (req, res) => {
                 pur.total_price, 
                 pur.purchase_date, 
                 pur.payment_status,
+                pur.payment_option,
+                pur.discount,
                 GROUP_CONCAT(p.name ORDER BY p.product_id SEPARATOR ', ') AS name, 
                 GROUP_CONCAT(pi.quantity ORDER BY p.product_id SEPARATOR ', ') AS quantity,
                 GROUP_CONCAT(pi.price ORDER BY p.product_id SEPARATOR ', ') AS price
@@ -270,6 +272,8 @@ const getProductsByCustomer = async (req, res) => {
                 pur.total_price, 
                 pur.purchase_date, 
                 pur.payment_status,
+                pur.payment_option,
+                pur.discount,
                 GROUP_CONCAT(p.name ORDER BY p.product_id SEPARATOR ', ') AS name, 
                 GROUP_CONCAT(pi.quantity ORDER BY p.product_id SEPARATOR ', ') AS quantity,
                 GROUP_CONCAT(pi.price ORDER BY p.product_id SEPARATOR ', ') AS price
