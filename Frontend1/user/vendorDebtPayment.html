@@ -8,6 +8,7 @@
         name="viewport"
         content="width=device-width, initial-scale=1, shrink-to-fit=no"
     />
+<!-- Bootstrap JS -->
 
     <!-- Bootstrap CSS v5.2.1 -->
     <link
@@ -101,7 +102,7 @@
             <a class="nav-link active" aria-current="page" href="allcos.html">ALL CUSTOMER</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="indexx.html">Dashboard</a>
+            <a class="nav-link" href="index.html">Dashboard</a>
           </li>
           <li class="nav-item"></li>
           <a class="nav-link" href="vender.html">vender</a>
@@ -150,6 +151,7 @@
                     <th>id</th>
                     <th>Payment date</th>
                     <th>Total Amount</th>
+                    <th>Payment Description</th>
                     <th>Print</th>
                     
                 </tr>
@@ -190,10 +192,8 @@
             </div>
         </div>
     </div>
-<!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-qBTxaLAp9Pw1Hj1QxzuFh1VWUj74Uu3+1YtSfH30+ihzIQJ8WnLO3gB4jhx7j8eN" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js" integrity="sha384-NKGhsgB/sfFZ3/kz4L90kXcZXPOo4qF5rjRfOPv2hoPggqg56LKBmVHEwW64NtF/" crossorigin="anonymous"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"></script>
     <script>
         
   const token = localStorage.getItem('token'); 
@@ -318,6 +318,7 @@ async function fetchDebtRecords(userId, customerId) {
                 customerId: record.vendor_id,
                 paymentDate: new Date(record.payment_date).toLocaleDateString(),
                 amount: record.payment_amount,
+                paymentDescription:record.payment_option
             }));
             renderDebtRecords(debtRecords);
         } else {
@@ -338,6 +339,7 @@ function renderDebtRecords(debtRecords) {
                 <td>${record.debtId}</td>
                 <td>${record.paymentDate}</td>
                 <td>${record.amount}</td>
+                <td>${record.paymentDescription}</td>
                 <td><button class="btn-print" onclick="printPage()">Print</button></td>
             </tr>
         `;
@@ -411,6 +413,8 @@ function handlePaymentOptionChange() {
 
 // Submit payment with selected options
 async function submitPayment() {
+    const userId = getUserIdFromToken();
+
     const paymentamount = document.getElementById('paymentAmount').value;
     const paymentOption = document.getElementById('paymentOption').value;
     const paymentOptionInput = document.getElementById('paymentOptionInput').value;
@@ -439,7 +443,7 @@ async function submitPayment() {
     }
 console.log(customerId, userId, paymentAmount, paymentDescription );
     try {
-        const response = await fetch('http://localhost:5000/api/v1/debt/makepayment', {
+        const response = await fetch('http://localhost:5000/api/v1/vendor/makeDebtPayment', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

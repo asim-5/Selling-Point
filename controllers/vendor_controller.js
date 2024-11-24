@@ -584,5 +584,78 @@ const deleteVendorDebtPurchase = async (req, res) => {
         }
     }
 };
+const makeVendorDebtPayment = async (req, res) => {
+    try {
+        const { customerId, userId, paymentamount,paymentDescription } = req.body;
+        console.log(customerId, userId, paymentamount,paymentDescription )
+        if (!customerId || !userId || !paymentamount) {
+            return res.status(400).send({
+                success: false,
+                message: 'Customer ID, User ID, and Payment Amount are required '
+            });
+        }
 
-module.exports={getVendors,addVendor,addSupply,getDebtProductsByVendor,getProductsByVendor,debtRecordByVendor,removeVendorDebt,deleteSupply,deleteVendorDebtPurchase}
+        // Start a transaction
+        await db.query('START TRANSACTION');
+
+        // Check the current total debt for the customer
+        const [customer] = await db.query(
+            'SELECT total_debt FROM vendor WHERE vendor_id = ? AND user_id = ?',
+            [customerId, userId]
+        );
+
+        if (customer.length === 0) {
+            await db.query('ROLLBACK');
+            return res.status(404).send({
+                success: false,
+                message: 'Vendor not found'
+            });
+        }
+
+        let currentTotalDebt = customer[0].total_debt;
+        let paymentAmount=parseFloat(paymentamount);
+        currentTotalDebt=parseFloat(currentTotalDebt);
+        console.log(paymentAmount,currentTotalDebt);
+        if (paymentAmount > currentTotalDebt) {
+            await db.query('ROLLBACK');
+            return res.status(400).send({
+                success: false,
+                message: 'Payment amount exceeds total debt'
+            });
+        }
+
+        // Insert the payment record
+        const insertPaymentQuery = `
+            INSERT INTO vendordebtpayments (vendor_id, payment_date, payment_amount, user_id,payment_option)
+            VALUES (?, CURDATE(), ?, ?,?)
+        `;
+        const insertPaymentValues = [customerId, paymentAmount, userId,paymentDescription ];
+        await db.query(insertPaymentQuery, insertPaymentValues);
+
+        // Update the total debt for the customer
+        const updateDebtQuery = `
+            UPDATE Vendor 
+            SET total_debt = total_debt - ?, last_update = CURDATE() 
+            WHERE vendor_id = ? AND user_id = ?
+        `;
+        const updateDebtValues = [paymentAmount, customerId, userId];
+        await db.query(updateDebtQuery, updateDebtValues);
+
+        // Commit the transaction
+        await db.query('COMMIT');
+
+        return res.status(200).send({
+            success: true,
+            message: 'Debt payment successful'
+        });
+    } catch (error) {
+        // Rollback the transaction in case of an error
+        await db.query('ROLLBACK');
+        console.error(error);
+        res.status(500).send({
+            success: false,
+            message: 'Error processing debt payment'
+        });
+    }
+};
+module.exports={getVendors,addVendor,addSupply,getDebtProductsByVendor,getProductsByVendor,debtRecordByVendor,removeVendorDebt,deleteSupply,deleteVendorDebtPurchase,makeVendorDebtPayment}

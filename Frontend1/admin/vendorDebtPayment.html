@@ -133,6 +133,7 @@
                     <th>Email</th>
                     <th>Address</th>
                     <th>Amount due</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody id="customer-info">
@@ -149,6 +150,7 @@
                     <th>id</th>
                     <th>Payment date</th>
                     <th>Total Amount</th>
+                    <th>Payment Description</th>
                     <th>Remove</th>
                     <th>Print</th>
                     
@@ -159,6 +161,39 @@
             </tbody>
         </table>
     </div>
+    <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="paymentModalLabel">Enter Payment Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <label for="paymentAmount" class="form-label">Payment Amount</label>
+                    <input type="number" class="form-control" id="paymentAmount" placeholder="Enter amount">
+    
+                    <label for="paymentOption" class="form-label mt-3">Payment Option</label>
+                    <select class="form-select" id="paymentOption" onchange="handlePaymentOptionChange()" >
+                        <option value="cash">Cash</option>
+                        <option value="cheque">Cheque</option>
+                        <option value="exchange"style="line-height: 100;">Exchange</option>
+                    </select>
+    
+                    <!-- Dynamic input for cheque or exchange -->
+                    <div id="paymentOptionDetails" class="mt-3" style="display: none;">
+                        <label for="paymentOptionInput" class="form-label" id="paymentOptionLabel"></label>
+                        <input type="text" class="form-control" id="paymentOptionInput" placeholder="">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="submitPayment()">Submit Payment</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"></script>
 
     <script>
   const token = localStorage.getItem('token'); 
@@ -245,6 +280,16 @@ function renderCustomerDetails() {
             <td>${customer.email}</td>
             <td>${customer.address}</td>
             <td>${customer.debt}</td>
+            <td>
+            <button 
+                class="btn btn-edit" 
+                id="insert" 
+                style="padding: 10px 20px; min-width: 150px;" 
+                data-bs-toggle="modal" 
+                data-bs-target="#paymentModal">
+                Make Payment
+            </button>
+            </td>
         `;
 
         const update = document.getElementById("last_update");
@@ -272,6 +317,7 @@ async function fetchDebtRecords(userId, customerId) {
                 customerId: record.vendor_id,
                 paymentDate: new Date(record.payment_date).toLocaleDateString(),
                 amount: record.payment_amount,
+                paymentDescription:record.payment_option
             }));
             renderDebtRecords(debtRecords);
         } else {
@@ -292,6 +338,7 @@ function renderDebtRecords(debtRecords) {
                 <td>${record.debtId}</td>
                 <td>${record.paymentDate}</td>
                 <td>${record.amount}</td>
+                <td>${record.paymentDescription}</td>
                 <td><button class="btn-print" onclick="Remove(${record.debtId})">Remove</button></td>
                 <td><button class="btn-print" onclick="printPage()">Print</button></td>
             </tr>
@@ -342,6 +389,86 @@ async function Remove(debtId) {
     } catch (error) {
         console.error('Error while trying to delete debt record:', error);
     }
+}
+function handlePaymentOptionChange() {
+    const paymentOption = document.getElementById('paymentOption').value;
+    const paymentOptionDetails = document.getElementById('paymentOptionDetails');
+    const paymentOptionLabel = document.getElementById('paymentOptionLabel');
+    const paymentOptionInput = document.getElementById('paymentOptionInput');
+
+    if (paymentOption === 'cheque') {
+        paymentOptionDetails.style.display = 'block';
+        paymentOptionLabel.textContent = 'Enter Cheque Number';
+        paymentOptionInput.placeholder = 'Cheque Number';
+    } else if (paymentOption === 'exchange') {
+        paymentOptionDetails.style.display = 'block';
+        paymentOptionLabel.textContent = 'Enter Exchange Details';
+        paymentOptionInput.placeholder = 'Exchange Details';
+    } else {
+        paymentOptionDetails.style.display = 'none';
+        paymentOptionLabel.textContent = '';
+        paymentOptionInput.value = '';
+    }
+}
+
+// Submit payment with selected options
+async function submitPayment() {
+    const userId = getUserIdFromToken();
+
+    const paymentamount = document.getElementById('paymentAmount').value;
+    const paymentOption = document.getElementById('paymentOption').value;
+    const paymentOptionInput = document.getElementById('paymentOptionInput').value;
+
+    let paymentDescription = '';
+
+    if (paymentOption === 'cash') {
+        paymentDescription = 'cash';
+    } else if (paymentOption === 'cheque') {
+        if (!paymentOptionInput) {
+            alert('Please enter a cheque number.');
+            return;
+        }
+        paymentDescription = `Cheque: ${paymentOptionInput}`;
+    } else if (paymentOption === 'exchange') {
+        if (!paymentOptionInput) {
+            alert('Please enter exchange details.');
+            return;
+        }
+        paymentDescription = `Exchange: ${paymentOptionInput}`;
+    }
+
+    if (!paymentAmount || paymentAmount <= 0) {
+        alert('Please enter a valid payment amount.');
+        return;
+    }
+console.log(customerId, userId, paymentAmount, paymentDescription );
+    try {
+        const response = await fetch('http://localhost:5000/api/v1/vendor/makeDebtPayment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ customerId, userId, paymentamount, paymentDescription })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            alert('Payment successfully submitted.');
+            fetchDebtRecords(userId, customerId);
+            document.getElementById('paymentAmount').value = '';
+            const modal = bootstrap.Modal.getInstance(document.getElementById('paymentModal'));
+            modal.hide();
+        } else {
+            alert(data.message || 'Failed to submit payment.');
+        }
+    } catch (error) {
+        console.error('Error submitting payment:', error);
+        alert('An error occurred while submitting the payment.');
+    }
+
+    fetchDebtRecords(userId, customerId);
+    getCustomersList(userId);
 }
 
 
