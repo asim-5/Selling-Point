@@ -160,16 +160,29 @@
             </tbody>
         </table>
     </div>
-    <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
+    <<div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="paymentModalLabel">Enter Payment Amount</h5>
+                    <h5 class="modal-title" id="paymentModalLabel">Enter Payment Details</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <label for="paymentAmount" class="form-label">Payment Amount</label>
                     <input type="number" class="form-control" id="paymentAmount" placeholder="Enter amount">
+    
+                    <label for="paymentOption" class="form-label mt-3">Payment Option</label>
+                    <select class="form-select" id="paymentOption" onchange="handlePaymentOptionChange()" >
+                        <option value="cash">Cash</option>
+                        <option value="cheque">Cheque</option>
+                        <option value="exchange"style="line-height: 100;">Exchange</option>
+                    </select>
+    
+                    <!-- Dynamic input for cheque or exchange -->
+                    <div id="paymentOptionDetails" class="mt-3" style="display: none;">
+                        <label for="paymentOptionInput" class="form-label" id="paymentOptionLabel"></label>
+                        <input type="text" class="form-control" id="paymentOptionInput" placeholder="">
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -363,46 +376,84 @@ async function Remove(debtId) {
     }
 }
 
-        async function submitPayment() {
-            const paymentamount = document.getElementById('paymentAmount').value;
+function handlePaymentOptionChange() {
+    const paymentOption = document.getElementById('paymentOption').value;
+    const paymentOptionDetails = document.getElementById('paymentOptionDetails');
+    const paymentOptionLabel = document.getElementById('paymentOptionLabel');
+    const paymentOptionInput = document.getElementById('paymentOptionInput');
 
-            if (!paymentAmount || paymentamount <= 0) {
-                alert("Please enter a valid payment amount.");
-                return;
-            }
+    if (paymentOption === 'cheque') {
+        paymentOptionDetails.style.display = 'block';
+        paymentOptionLabel.textContent = 'Enter Cheque Number';
+        paymentOptionInput.placeholder = 'Cheque Number';
+    } else if (paymentOption === 'exchange') {
+        paymentOptionDetails.style.display = 'block';
+        paymentOptionLabel.textContent = 'Enter Exchange Details';
+        paymentOptionInput.placeholder = 'Exchange Details';
+    } else {
+        paymentOptionDetails.style.display = 'none';
+        paymentOptionLabel.textContent = '';
+        paymentOptionInput.value = '';
+    }
+}
 
-            try {
-                const response = await fetch('http://localhost:5000/api/v1/debt/makepayment', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ customerId, userId, paymentamount })
-                });
+// Submit payment with selected options
+async function submitPayment() {
+    const paymentamount = document.getElementById('paymentAmount').value;
+    const paymentOption = document.getElementById('paymentOption').value;
+    const paymentOptionInput = document.getElementById('paymentOptionInput').value;
 
-                const data = await response.json();
+    let paymentDescription = '';
 
-                if (response.ok && data.success) {
-                    alert("Payment successfully submitted.");
-                    // Optionally refresh the debt records or other UI components
-                    fetchDebtRecords(userId, customerId);
-                    document.getElementById('paymentAmount').value = '';
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('paymentModal'));
-                    modal.hide();
-                } else {
-                    alert(data.message || "Failed to submit payment.");
-
-                }
-            } catch (error) {
-                console.error("Error submitting payment:", error);
-                alert("An error occurred while submitting the payment.");
-            }
-            fetchDebtRecords(userId, customerId);
-            getCustomersList(userId);
-            // Close the modal after payment submission
-            const paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
-            paymentModal.hide();
+    if (paymentOption === 'cash') {
+        paymentDescription = 'cash';
+    } else if (paymentOption === 'cheque') {
+        if (!paymentOptionInput) {
+            alert('Please enter a cheque number.');
+            return;
         }
+        paymentDescription = `Cheque: ${paymentOptionInput}`;
+    } else if (paymentOption === 'exchange') {
+        if (!paymentOptionInput) {
+            alert('Please enter exchange details.');
+            return;
+        }
+        paymentDescription = `Exchange: ${paymentOptionInput}`;
+    }
+
+    if (!paymentAmount || paymentAmount <= 0) {
+        alert('Please enter a valid payment amount.');
+        return;
+    }
+console.log(customerId, userId, paymentAmount, paymentDescription );
+    try {
+        const response = await fetch('http://localhost:5000/api/v1/debt/makepayment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ customerId, userId, paymentamount, paymentDescription })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            alert('Payment successfully submitted.');
+            fetchDebtRecords(userId, customerId);
+            document.getElementById('paymentAmount').value = '';
+            const modal = bootstrap.Modal.getInstance(document.getElementById('paymentModal'));
+            modal.hide();
+        } else {
+            alert(data.message || 'Failed to submit payment.');
+        }
+    } catch (error) {
+        console.error('Error submitting payment:', error);
+        alert('An error occurred while submitting the payment.');
+    }
+
+    fetchDebtRecords(userId, customerId);
+    getCustomersList(userId);
+}
     </script>
 </body>
 </html>

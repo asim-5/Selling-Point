@@ -153,6 +153,8 @@
                     <th>Purchase date</th>
                     <th>quantity</th>
                     <th>Total Amount</th>
+                    <th>Payment Desription</th>
+                    <th>Discount</th> 
                     <th>delete</th>
                     <th>print</th>
                     
@@ -294,7 +296,9 @@ function renderCustomerDetails() {
                     purchaseDate: new Date(product.purchase_date).toLocaleDateString(),
                     quantity: product.quantity,
                     totalPrice: product.total_price,
-                    payment_status: product.payment_status
+                    payment_status: product.payment_status,
+                    payment_option:product.payment_option,
+                    discount:product.discount
                 }));
                 renderDebtProducts();
             } else {
@@ -317,6 +321,8 @@ function renderCustomerDetails() {
                     <td>${product.purchaseDate}</td>
                     <td>${product.quantity}</td>
                     <td>${product.totalPrice}</td>
+                    <td>${product.payment_option}</td>
+                    <td>${product.discount}</td>
                     <td><button class="btn-print" onclick="deleteProduct(${product.purchaseId})">Delete</button></td>
                     <td><button class="btn-print" onclick="printPage()">Print</button></td>
                 </tr>

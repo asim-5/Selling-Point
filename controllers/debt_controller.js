@@ -2,12 +2,12 @@ const db = require("../config/db");
 
 const makeDebtPayment = async (req, res) => {
     try {
-        const { customerId, userId, paymentamount } = req.body;
-
+        const { customerId, userId, paymentamount,paymentDescription } = req.body;
+        console.log(customerId, userId, paymentamount,paymentDescription )
         if (!customerId || !userId || !paymentamount) {
             return res.status(400).send({
                 success: false,
-                message: 'Customer ID, User ID, and Payment Amount are required'
+                message: 'Customer ID, User ID, and Payment Amount are required '
             });
         }
 
@@ -42,10 +42,10 @@ const makeDebtPayment = async (req, res) => {
 
         // Insert the payment record
         const insertPaymentQuery = `
-            INSERT INTO DebtPayments (customer_id, payment_date, payment_amount, user_id)
-            VALUES (?, CURDATE(), ?, ?)
+            INSERT INTO DebtPayments (customer_id, payment_date, payment_amount, user_id,payment_option)
+            VALUES (?, CURDATE(), ?, ?,?)
         `;
-        const insertPaymentValues = [customerId, paymentAmount, userId];
+        const insertPaymentValues = [customerId, paymentAmount, userId,paymentDescription ];
         await db.query(insertPaymentQuery, insertPaymentValues);
 
         // Update the total debt for the customer
