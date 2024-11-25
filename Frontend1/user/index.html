@@ -520,9 +520,9 @@
         saleItems.appendChild(listItem);
 
         // Calculate discounted price for the item
-        const effectivePrice = item.price - (item.discount || 0);
+        const effectivePrice = item.price ;
         const itemTotal = Math.max(0, effectivePrice) * item.quantity; // Ensure price is not negative
-        subTotal += itemTotal;
+        subTotal += itemTotal- (item.discount || 0);
 
         // Add discount for this item to total discount (only once, not per quantity)
         totalDiscount += item.discount || 0;
@@ -627,7 +627,7 @@
                         price: item.price,
                         quantity: item.quantity
                     })),
-                    payment_details: paymentDetails,
+                    payment_detail: paymentDetails,
                     discount: parseFloat(total_discount.textContent.replace('$', ''))
                 };
 

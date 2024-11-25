@@ -62,63 +62,115 @@
 
 
 
+<div class="container">
+    <!-- Current Sale Section -->
+    <div class="current-sale">
+        <div id="print">
+        <h2>Current Sale</h2>
+        <ul id="sale-items"></ul>
+        <p>Sub-total: <span id="sub-total">RS:0.00</span></p>
+        <p>Tax (NZ GST): <span id="tax">RS:0.00</span></p>
+        <p><b>Total Discount:<span id="totalDiscountEl"> $0.00</span></b></p>
+        <p><b>TOTAL: <span id="total">RS:0.00</span></b></p>
+        <!-- Customer ID Input -->
+        <div class="vendor-id">
+            <label for="vendor-id-input">Customer ID:</label>
+            <button id="open-modal-btn">Select Customer</button>
+            <input type="text" id="vendor-id-input" placeholder="Customer ID" >
 
-
-    <div class="container">
-        <!-- Current Sale Section -->
-        <div class="current-sale">
-            <h3>Current Sale</h3>
-            <ul id="sale-items"></ul>
-            <p>Sub-total: <span id="sub-total">$0.00</span></p>
-            <p>Tax (NZ GST): <span id="tax">$0.00</span></p>
-            <p>Total Discount:<p id="totalDiscountEl"> $0.00</p></p>
-            <p><b>TOTAL: <span id="total">$0.00</span></b></p>
-            
-            <!-- Customer ID Input -->
-            <div class="vendor-id">
-                <label for="vendor-id-input">Customer ID:</label>
-                <button id="open-modal-btn">Select Customer</button>
-                <input type="text" id="vendor-id-input" placeholder="Customer ID" readonly>
+        </div>
+        </div>
+        <!-- Modal structure -->
+        <div id="vendor-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-btn">&times;</span>
+                <h2>Select Customer</h2>
+                <ul id="vendor-list"></ul>
             </div>
-            
-            <!-- Modal structure -->
-            <div id="vendor-modal" class="modal">
-                <div class="modal-content">
-                    <span class="close-btn">&times;</span>
-                    <h2>Select Customer</h2>
-                    <ul id="vendor-list"></ul>
+        </div>
+        <select id="signal" name="signal">
+            <option value=1>Pay</option>
+            <option value=0>Debt</option>
+        </select>
+        <!-- Save Receipt Button -->
+        <button id="save-receipt-button" >Save  Receipt</button>
+        <button id="print-receipt-button" onclick="printPage()"> Print Receipt</button>
+        
+    </div>
+
+    <!-- Categories Section -->
+    <div class="categories">
+        <h1>Categories</h1>
+        <div class="search-bar">
+            <input type="text" id="product-search" placeholder="Search product...">
+        </div>
+        <div id="categoryButtons" class="category-buttons"></div>
+    </div>
+
+    <!-- Products Section -->
+    <div class="products">
+        <h2>Products</h>
+        <div id="product-list"></div>
+    </div>
+</div>
+<div class="modal fade" id="passwordModal" tabindex="-1" aria-labelledby="passwordModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="passwordModalLabel">Enter Admin Password</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="admin-password" class="form-label">Password</label>
+            <input type="password" class="form-control" id="admin-password" placeholder="Enter your password" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="confirm-password-btn">Confirm</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="paymentModal" class="modal">
+    <div class="modal-content">
+        <h3>Select Payment Option</h3>
+        <form id="paymentForm">
+            <div class="payment-option">
+                <label>
+                    <input type="radio" name="paymentOption" value="Cash" /> Cash
+                </label>
+            </div>
+            <div class="payment-option">
+                <label>
+                    <input type="radio" name="paymentOption" value="Cheque" /> Cheque
+                </label>
+                <div id="chequeInput" class="conditional-input">
+                    <label for="chequeNumber">Cheque Number:</label>
+                    <input type="text" id="chequeNumber" />
                 </div>
             </div>
-            <select id="signal" name="signal">
-                <option value=1>Pay</option>
-                <option value=0>Debt</option>
-            </select>
-            <!-- Save Receipt Button -->
-            <button id="save-receipt-button">Save & Print Receipt</button>
-        </div>
-
-        <!-- Search Bar -->
-        
-
-        <!-- Categories Section -->
-
-          <div class="categories">
-            <h3>Categories</h3>
-            <div class="search-bar">
-                <input type="text" id="product-search" placeholder="Search product...">
+            <div class="payment-option">
+                <label>
+                    <input type="radio" name="paymentOption" value="Exchange" /> Exchange
+                </label>
+                <div id="exchangeInput" class="conditional-input">
+                    <label for="exchangeDetails">Exchange Details:</label>
+                    <textarea id="exchangeDetails" rows="4"></textarea>
+                </div>
             </div>
-            <div id="categoryButtons" class="category-buttons"></div>
-        </div>
-
-        <!-- Products Section -->
-        <div class="products">
-            <h3>Products</h3>
-            <div id="product-list"></div>
-        </div>
+            <div class="modal-actions">
+                <button type="button" id="confirmPaymentButton" class="btn btn-confirm">Confirm</button>
+                <button type="button" id="closeModalButton" class="btn btn-cancel">Cancel</button>
+            </div>
+        </form>
     </div>
+</div>
+<div id="overlay" class="overlay"></div>
     <script>
-         //print start
-         function printPage() {
+        // Function to print the page
+        function printPage() {
     const container = document.getElementById("print");
     if (!container) {
         console.error("Error: 'container' not found.");
@@ -130,12 +182,13 @@
     const originalContent = document.body.innerHTML; // Save original content
     document.body.innerHTML = container.innerHTML; // Replace body content
 
-    // Trigger print dialog
-    window.print();
-
-    // Restore content after the print dialog completes
-    document.body.innerHTML = originalContent;
-}
+    // Wait for DOM update before triggering print
+    setTimeout(() => {
+        window.print(); // Open print dialog
+        document.body.innerHTML = originalContent; // Restore content
+        location.reload(); // Optional: Reload to restore state
+    }, 200); // Slight delay ensures rendering
+    }
 //print end
         const categories = {};
         const billItems = [];
@@ -216,6 +269,7 @@
                         console.error(`No products found for category: ${categoryName}`);
                     }
                 }
+
     
                     // Optionally, display the default or first category
                     if (data.data.length > 0) {
@@ -248,8 +302,9 @@
                 productDiv.classList.add('product-item');
                 productDiv.innerHTML = `
                     <span>${product.name}</span>
-                    <span>${product.price}</span>
+                     <span>${product.price}</span>
                     <button class="product-button" data-name="${product.name}" data-id="${product.productId}" data-price="${product.price}">Add</button>
+                   
                 `;
                 productList.appendChild(productDiv);
             });
@@ -301,7 +356,7 @@
                     productDiv.classList.add('product-item');
                     productDiv.innerHTML = `
                         <span>${product.name}</span>
-                        <span>${product.price}</span>
+                          <span>${product.price}</span>
                         <button class="product-button" data-name="${product.name}" data-id="${product.productId}" data-price="${product.price}">Add</button>
                     `;
                     productList.appendChild(productDiv);
@@ -369,24 +424,22 @@
         saleItems.appendChild(listItem);
 
         // Calculate discounted price for the item
-        const effectivePrice = item.price - (item.discount || 0);
+        const effectivePrice = item.price ;
         const itemTotal = Math.max(0, effectivePrice) * item.quantity; // Ensure price is not negative
-        subTotal += itemTotal;
+        subTotal += itemTotal- (item.discount || 0);
 
         // Add discount for this item to total discount (only once, not per quantity)
         totalDiscount += item.discount || 0;
     });
 
     // Update subtotal, tax, total, and total discount
-    subTotalEl.textContent = `$${subTotal.toFixed(2)}`;
+    subTotalEl.textContent = `${subTotal.toFixed(2)}`;
     const tax = subTotal * taxRate;
-    taxEl.textContent = `$${tax.toFixed(2)}`;
-    totalEl.textContent = `$${(subTotal + tax).toFixed(2)}`;
-    totalDiscountEl.textContent = `Total Discount: $${totalDiscount.toFixed(2)}`; // Update total discount field
+    taxEl.textContent = `${tax.toFixed(2)}`;
+    totalEl.textContent = `${(subTotal + tax).toFixed(2)}`;
+    totalDiscountEl.textContent = `${totalDiscount.toFixed(2)}`; // Update total discount field
 }
-
-
-
+    
             // Function to decrease quantity
             function decreaseQuantity(item) {
                 const existingItem = currentSale.find(i => i.name === item.name);
@@ -398,49 +451,123 @@
                 }
                 updateSaleUI();
             }
+              
             const signalSelect = document.getElementById('signal');
             // Save and print receipt functionality
-             saveReceiptButton.addEventListener('click', async () => {
+            const paymentModal = document.getElementById('paymentModal');
+            const overlay = document.getElementById('overlay');
+            const confirmPaymentButton = document.getElementById('confirmPaymentButton');
+            const closeModalButton = document.getElementById('closeModalButton');
+            const chequeInput = document.getElementById('chequeInput');
+            const exchangeInput = document.getElementById('exchangeInput');
+            const chequeNumberInput = document.getElementById('chequeNumber');
+            const exchangeDetailsInput = document.getElementById('exchangeDetails');
+
+            let paymentDetails = ""; // This will store the payment details
+
+            saveReceiptButton.addEventListener('click', () => {
+        // Open the modal
+                paymentModal.style.display = 'block';
+                overlay.style.display = 'block';
+            })
+
+        document.querySelectorAll('input[name="paymentOption"]').forEach(option => {
+        option.addEventListener('change', () => {
+            if (option.value === "Cheque") {
+                chequeInput.style.display = 'block';
+                exchangeInput.style.display = 'none';
+            } else if (option.value === "Exchange") {
+                chequeInput.style.display = 'none';
+                exchangeInput.style.display = 'block';
+            } else {
+                chequeInput.style.display = 'none';
+                exchangeInput.style.display = 'none';
+            }
+        });
+    });
+
+    confirmPaymentButton.addEventListener('click', async () => {
+        // Get selected payment option
+                const selectedOption = document.querySelector('input[name="paymentOption"]:checked');
+
+                if (!selectedOption) {
+                    alert('Please select a payment option');
+                    return;
+                }
+
+                if (selectedOption.value === "Cash") {
+                    paymentDetails = "Cash";
+                } else if (selectedOption.value === "Cheque") {
+                    const chequeNumber = chequeNumberInput.value.trim();
+                    if (!chequeNumber) {
+                        alert('Please enter a cheque number');
+                        return;
+                    }
+                    paymentDetails = chequeNumber;
+                } else if (selectedOption.value === "Exchange") {
+                    const exchangeDetails = exchangeDetailsInput.value.trim();
+                    if (!exchangeDetails) {
+                        alert('Please enter exchange details');
+                        return;
+                    }
+                    // paymentDetails = `Exchange: ${exchangeDetails}`;
+                    paymentDetails=exchangeDetails;
+                }
+
+                // Close the modal
+                paymentModal.style.display = 'none';
+                overlay.style.display = 'none';
+
+                // Prepare receipt data
                 const receiptData = {
                     customer_id: customerIdInput.value, // Assuming this is the correct customer ID field
                     purchase_date: new Date().toISOString().slice(0, 19).replace('T', ' '), // Current date in the required format
                     total_price: parseFloat(totalEl.textContent.replace('$', '')), // Remove the $ and convert to number
                     payment_status: signalSelect.value, // Assuming this is the field for payment status
                     user_id: uid, // Assuming user_id is 1 for now (this can be dynamic if needed)
+                     // Add payment details here
                     items: currentSale.map(item => ({
                         product_id: item.id, // Function to map product name to product ID
                         price: item.price,
                         quantity: item.quantity
                     })),
+                    payment_detail: paymentDetails,
+                    discount: parseFloat(total_discount.textContent.replace('$', ''))
                 };
 
-             console.log('Formatted Receipt Data:', receiptData);
-             console.log(total_discount);
-             alert('hello');
+                console.log('Formatted Receipt Data:', receiptData);
+                // console.log(total_discount);
+                try {
+                    const response = await fetch('http://localhost:5000/api/v1/product/makeTransaction', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(receiptData),
+                    });
 
-                // try {
-                //     const response = await fetch('http://localhost:5000/api/v1/product/makeTransaction', {
-                //         method: 'POST',
-                //         headers: {
-                //             'Content-Type': 'application/json',
-                //         },
-                //         body: JSON.stringify(receiptData),
-                //     });
+                    if (!response.ok) {
+                        throw new Error(`Failed to save receipt: ${response.statusText}`);
+                    }
 
-                //     if (!response.ok) {
-                //         throw new Error(`Failed to save receipt: ${response.statusText}`);
-                //     }
+                    const result = await response.json();
+                    alert('Receipt saved successfully!');
+                    console.log('API Response:', result);
+                } catch (error) {
+                    console.error('Error saving receipt:', error);
+                    alert('Failed to save receipt. Please try again.');
+                }
 
-                //     const result = await response.json();
-                //     alert('Receipt saved successfully!');
-                //     console.log('API Response:', result);
-                // } catch (error) {
-                //     console.error('Error saving receipt:', error);
-                //     alert('Failed to save receipt. Please try again.');
-                // }
-                // location.reload();
+                location.reload();
 
+                printPage()
             });
+
+        closeModalButton.addEventListener('click', () => {
+            paymentModal.style.display = 'none';
+            overlay.style.display = 'none';
+        });
+
 
     
             // Load categories for user id
@@ -455,7 +582,43 @@
             window.location.href = 'login.html';
         }
 
-  
+    document.getElementById('admin-btn').addEventListener('click', async function () 
+    {
+    // Prompt for password
+            const password = prompt("Enter admin password:");
+            
+            // Assuming you have a way to get the user ID, set it here
+            // Prepare the payload to send to the backend
+            const requestBody = {
+                userid: uid,
+                password: password
+            };
+
+            try {
+                // Send the password and userId to the backend for validation
+                const response = await fetch('http://localhost:5000/api/v1/user/admin', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                const data = await response.json();
+
+                // Check if the login was successful
+                if (data.success) {
+                    // Redirect to admin page on success
+                    window.location.href = "../admin/indexx.html";
+                } else {
+                    // Show an error message on failure
+                    alert(data.message || "Incorrect password.");
+                }
+            } catch (error) {
+                console.error("Error logging in admin:", error);
+                alert("An error occurred while trying to log in.");
+            }
+        });
         document.addEventListener("DOMContentLoaded", () => {
             const openModalBtn = document.getElementById("open-modal-btn");
             const modal = document.getElementById("vendor-modal");
@@ -514,8 +677,6 @@
                 }
             }
         });
-
-
     </script>>
 
 
