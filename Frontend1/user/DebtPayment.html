@@ -85,6 +85,20 @@
         .btn-detail {
             background-color: #007bff;
         }
+        .custom-select {
+            width: 200px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .custom-option {
+            padding: 10px;
+            white-space: pre-line; /* Allows line breaks in content */
+            cursor: pointer;
+            border-bottom: 1px solid #ccc;
+        }
+        .custom-option:hover {
+            background-color: #f0f0f0;
+        }
     </style>
 </head>
 <body>
@@ -176,7 +190,8 @@
                     <select class="form-select" id="paymentOption" onchange="handlePaymentOptionChange()" >
                         <option value="cash">Cash</option>
                         <option value="cheque">Cheque</option>
-                        <option value="exchange"style="line-height: 100;">Exchange</option>
+                        <!-- <option value="exchange">Exchange</option> -->
+                        <option value="exchange" title="Line 1\nLine 2\nLine 3">Exchange</option>
                     </select>
     
                     <!-- Dynamic input for cheque or exchange -->

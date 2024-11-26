@@ -1,178 +1,280 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-     <!-- Required meta tags -->
-     <meta charset="utf-8" />
-     <meta
-         name="viewport"
-         content="width=device-width, initial-scale=1, shrink-to-fit=no"
-     />
+    <!-- Required meta tags -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 
-     <!-- Bootstrap CSS v5.2.1 -->
-     <link
-         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
-         rel="stylesheet"
-         integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
-         crossorigin="anonymous"
-     />
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap CSS v5.3.2 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous" />
+    
     <title>POS Dashboard</title>
     <link rel="stylesheet" href="index.css">
+    <style>
+        .logout-btn {
+            padding: 7.5px 15px;
+            background-color: #dc3545;
+            color: white;
+            font-size: 13px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 7px;
+            transition: background-color 0.3s ease;
+            margin-right: 5px;
+        }
 
+        .logout-btn:hover {
+            background-color: #c82333;
+        }
+        #admin-btn{
+            padding: 7.5px 15px;
+            background-color: #0d7c2f;
+            color: white;
+            font-size: 13px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 7px;
+            transition: background-color 0.3s ease;
+            margin-right: 5px;
+        }
+        #admin-btn {
+    pointer-events: none; /* Makes the button unclickable */
+    opacity: 0; /* Makes the button semi-transparent */
+}
+
+#admin-btn:hover {
+    background-color: #25b450;
+}
+
+
+
+        .modal {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1000;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        width: 500px;
+        padding: 20px;
+        height: 700px;
+        background: rgba(255, 255, 255, 0);
+       
+
+    }
+
+    .modal-content {
+        text-align: center;
+    }
+
+    .modal h3 {
+        margin-bottom: 20px;
+    }
+
+    .payment-option {
+        margin-bottom: 15px;
+        text-align: left;
+    }
+
+    .conditional-input {
+        display: none;
+        margin-top: 10px;
+    }
+
+    .modal-actions {
+        margin-top: 20px;
+    }
+
+    .btn {
+        padding: 10px 20px;
+        margin: 5px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .btn-confirm {
+        background-color: #4CAF50;
+        color: white;
+    }
+
+    .btn-cancel {
+        background-color: #f44336;
+        color: white;
+    }
+    #exchangeDetails {
+    resize: none; /* Prevent resizing if you want a fixed height */
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    width: 100%;
+    height: 200px;
+}
+    #chequeNumber{
+        width: 100%;
+        height: 50px;
+    }
+    /* Overlay Styling */
+    .overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+    }
+    </style>
 </head>
 
 <body>
-  <header>
-    <!-- place navbar here -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <div class="container-fluid">
-          
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-          </button>
-          <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-              <li class="nav-item">
-                <a class="nav-link active" aria-current="page" href="allcos.html">ALL CUSTOMER</a>
-              </li>
-              
-              <li class="nav-item">
-                <a class="nav-link" href="indexx.html">Dashboard</a>
-              </li>
-              <li class="nav-item"></li>
-                    <a class="nav-link" href="vender.html">vender</a>
-                  </li>
-                  <li class="nav-item"></li>
-                    <a class="nav-link" href="stock.html">stock</a>
-                  </li>
-                  <li class="nav-item"></li>
-                    <a class="nav-link" href="vendorAdd.html">Add Supply</a>
-                   </li>
-                  
-            </ul>
-            
-            <!-- Logout Button -->
-          <button id="logout-btn" class="btn btn-outline-danger">Logout</button>
-          </div>
-        </div>
-      </nav>
-</header>
-
-
-
-
-<div class="container">
-    <!-- Current Sale Section -->
-    <div class="current-sale">
-        <div id="print">
-        <h2>Current Sale</h2>
-        <ul id="sale-items"></ul>
-        <p>Sub-total: <span id="sub-total">RS:0.00</span></p>
-        <p>
-            <label for="tax-input">Tax:</label>
-            <input type="number" id="tax-input" placeholder="Enter tax amount" />
-        </p>
-        <p>Tax (NZ GST): <span id="tax">RS:0.00</span></p>
-        <p><b>Total Discount:<span id="totalDiscountEl"> $0.00</span></b></p>
-        <p><b>TOTAL: <span id="total">RS:0.00</span></b></p>
-        <!-- Customer ID Input -->
-        <div class="vendor-id">
-            <label for="vendor-id-input">Customer ID:</label>
-            <button id="open-modal-btn">Select Customer</button>
-            <input type="text" id="vendor-id-input" placeholder="Customer ID" >
-
-        </div>
-        </div>
-        <!-- Modal structure -->
-        <div id="vendor-modal" class="modal">
-            <div class="modal-content">
-                <span class="close-btn">&times;</span>
-                <h2>Select Customer</h2>
-                <ul id="vendor-list"></ul>
+    <header>
+        <!-- Navbar -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container-fluid">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item"><a class="nav-link active" href="allcos.html">ALL CUSTOMER</a></li>
+                        <li class="nav-item"><a class="nav-link" href="index.html">Dashboard</a></li>
+                        <li class="nav-item"><a class="nav-link" href="vender.html">Vender</a></li>
+                        <li class="nav-item"><a class="nav-link" href="stock.html">Stock</a></li>
+                        <li class="nav-item"></li>
+                            <a class="nav-link" href="vendorAdd.html">Add Supply</a>
+                        </li>
+                    </ul>
+                    <!-- Admin Button -->
+                    <button id="admin-btn" class="btn btn-outline-"></button>
+                    <!-- logout button -->
+                    <button class="logout-btn" onclick="logout()">Logout</button>
+                </div>
             </div>
-        </div>
-        <select id="signal" name="signal">
-            <option value=1>Pay</option>
-            <option value=0>Debt</option>
-        </select>
-        <!-- Save Receipt Button -->
-        <button id="save-receipt-button" >Save  Receipt</button>
-        <button id="print-receipt-button" onclick="printPage()"> Print Receipt</button>
-        
-    </div>
+        </nav>
+    </header>
 
-    <!-- Categories Section -->
-    <div class="categories">
-        <h1>Categories</h1>
-        <div class="search-bar">
-            <input type="text" id="product-search" placeholder="Search product...">
-        </div>
-        <div id="categoryButtons" class="category-buttons"></div>
-    </div>
+    <div class="container">
+        <!-- Current Sale Section -->
+        <div class="current-sale">
+            <div id="print">
+            <h2>Current Sale</h2>
+            <ul id="sale-items"></ul>
+            <p>Sub-total: <span id="sub-total">RS:0.00</span></p>
+            <p>
+                <label for="tax-input">Tax:</label>
+                <input type="number" id="tax-input" placeholder="Enter tax amount" />
+            </p>
+            <p>Tax (NZ GST): <span id="tax">RS:0.00</span></p>
+            <p><b>Total Discount:<span id="totalDiscountEl"> $0.00</span></b></p>
+            <p><b>TOTAL: <span id="total">RS:0.00</span></b></p>
+            <!-- Customer ID Input -->
+            <div class="vendor-id">
+                <label for="vendor-id-input">Customer ID:</label>
+                <button id="open-modal-btn">Select Customer</button>
+                <input type="text" id="vendor-id-input" placeholder="Customer ID" >
 
-    <!-- Products Section -->
-    <div class="products">
-        <h2>Products</h>
-        <div id="product-list"></div>
-    </div>
-</div>
-<div class="modal fade" id="passwordModal" tabindex="-1" aria-labelledby="passwordModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="passwordModalLabel">Enter Admin Password</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            </div>
+            <!-- Modal structure -->
+            <div id="vendor-modal" class="modal">
+                <div class="modal-content">
+                    <span class="close-btn">&times;</span>
+                    <h2>Select Customer</h2>
+                    <ul id="vendor-list"></ul>
+                </div>
+            </div>
+            <select id="signal" name="signal">
+                <option value=1>Pay</option>
+                <option value=0>Debt</option>
+            </select>
+            <!-- Save Receipt Button -->
+            <button id="save-receipt-button" >Save  Receipt</button>
+            <button id="print-receipt-button" onclick="printPage()"> Print Receipt</button>
+            
         </div>
-        <div class="modal-body">
-          <div class="mb-3">
-            <label for="admin-password" class="form-label">Password</label>
-            <input type="password" class="form-control" id="admin-password" placeholder="Enter your password" required>
+
+        <!-- Categories Section -->
+        <div class="categories">
+            <h1>Categories</h1>
+            <div class="search-bar">
+                <input type="text" id="product-search" placeholder="Search product...">
+            </div>
+            <div id="categoryButtons" class="category-buttons"></div>
+        </div>
+
+        <!-- Products Section -->
+        <div class="products">
+            <h2>Products</h>
+            <div id="product-list"></div>
+        </div>
+    </div>
+    <div class="modal fade" id="passwordModal" tabindex="-1" aria-labelledby="passwordModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="passwordModalLabel">Enter Admin Password</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div class="mb-3">
+                <label for="admin-password" class="form-label">Password</label>
+                <input type="password" class="form-control" id="admin-password" placeholder="Enter your password" required>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              <button type="button" class="btn btn-primary" id="confirm-password-btn">Confirm</button>
+            </div>
           </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary" id="confirm-password-btn">Confirm</button>
         </div>
       </div>
-    </div>
-  </div>
-  <div id="paymentModal" class="modal">
-    <div class="modal-content">
-        <h3>Select Payment Option</h3>
-        <form id="paymentForm">
-            <div class="payment-option">
-                <label>
-                    <input type="radio" name="paymentOption" value="Cash" /> Cash
-                </label>
-            </div>
-            <div class="payment-option">
-                <label>
-                    <input type="radio" name="paymentOption" value="Cheque" /> Cheque
-                </label>
-                <div id="chequeInput" class="conditional-input">
-                    <label for="chequeNumber">Cheque Number:</label>
-                    <input type="text" id="chequeNumber" />
+      <div id="paymentModal" class="modal">
+        <div class="modal-content">
+            <h3>Select Payment Option</h3>
+            <form id="paymentForm">
+                <div class="payment-option">
+                    <label>
+                        <input type="radio" name="paymentOption" value="Cash" /> Cash
+                    </label>
                 </div>
-            </div>
-            <div class="payment-option">
-                <label>
-                    <input type="radio" name="paymentOption" value="Exchange" /> Exchange
-                </label>
-                <div id="exchangeInput" class="conditional-input">
-                    <label for="exchangeDetails">Exchange Details:</label>
-                    <textarea id="exchangeDetails" rows="4"></textarea>
+                <div class="payment-option">
+                    <label>
+                        <input type="radio" name="paymentOption" value="Cheque" /> Cheque
+                    </label>
+                    <div id="chequeInput" class="conditional-input">
+                        <label for="chequeNumber">Cheque Number:</label>
+                        <input type="text" id="chequeNumber" />
+                    </div>
                 </div>
-            </div>
-            <div class="modal-actions">
-                <button type="button" id="confirmPaymentButton" class="btn btn-confirm">Confirm</button>
-                <button type="button" id="closeModalButton" class="btn btn-cancel">Cancel</button>
-            </div>
-        </form>
+                <div class="payment-option">
+                    <label>
+                        <input type="radio" name="paymentOption" value="Exchange" /> Exchange
+                    </label>
+                    <div id="exchangeInput" class="conditional-input">
+                        <label for="exchangeDetails">Exchange Details:</label>
+                        <textarea id="exchangeDetails" rows="4"></textarea>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" id="confirmPaymentButton" class="btn btn-confirm">Confirm</button>
+                    <button type="button" id="closeModalButton" class="btn btn-cancel">Cancel</button>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
-<div id="overlay" class="overlay"></div>
+    <div id="overlay" class="overlay"></div>
+
     <script>
+       
         // Function to print the page
         function printPage() {
     const container = document.getElementById("print");
@@ -313,7 +415,9 @@
                 productList.appendChild(productDiv);
             });
         }
-    
+        function update(){
+            updateSaleUI();
+        }
         document.addEventListener('DOMContentLoaded', () => {
             const productList = document.getElementById('product-list');
             const saleItems = document.getElementById('sale-items');
@@ -447,7 +551,7 @@
     totalEl.textContent = `${(subTotal + taxValue).toFixed(2)}`; // Add tax value directly to subtotal
     totalDiscountEl.textContent = `${totalDiscount.toFixed(2)}`; // Update total discount field
 }
-    
+
             // Function to decrease quantity
             function decreaseQuantity(item) {
                 const existingItem = currentSale.find(i => i.name === item.name);
@@ -459,6 +563,7 @@
                 }
                 updateSaleUI();
             }
+            
               
             const signalSelect = document.getElementById('signal');
             // Save and print receipt functionality
@@ -586,8 +691,8 @@
      
         function logout() {
             // Implement logout functionality
-            localStorage.removeItem('token');
-            window.location.href = 'login.html';
+           
+            window.location.href = "../user/index.html";  
         }
 
     document.getElementById('admin-btn').addEventListener('click', async function () 
@@ -685,20 +790,14 @@
                 }
             }
         });
-    </script>>
 
 
-  <!-- Bootstrap JS with correct integrity -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" 
-  integrity="sha384-8bnVHoC3Gphq7DBFt2tAR1Yb8cOZhgrxnL+GdGo7bjUjEdiGHsoZoD3O7eKpspki" 
-  crossorigin="anonymous"></script>
+    </script>
+    
+    
 
-<script>
-  // Logout Button Logic
-  document.getElementById('logout-btn').addEventListener('click', function () {
-    // Redirect back to the main index page
-    window.location.href = "../user/index.html";  // Adjust the path if needed
-  });
-</script>
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js" integrity="sha384-oBqDVmMz4fnFO9gybktF+z6kbuTqVDn0mgF1vj4irZyw+PQ5mHkA1Utbm24D+R1e" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js" integrity="sha384-oBqDVmMz4fnFO9gybktF+z6kbuTqVDn0mgF1vj4irZyw+PQ5mHkA1Utbm24D+R1e" crossorigin="anonymous"></script>
 </body>
 </html>

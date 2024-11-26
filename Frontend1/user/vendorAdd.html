@@ -192,7 +192,11 @@
             <h3>Current Sale</h3>
             <ul id="sale-items"></ul>
             <p>Sub-total: <span id="sub-total">$0.00</span></p>
-            <p>Tax (NZ GST): <span id="tax">$0.00</span></p>
+            <p>
+                <label for="tax-input">Tax:</label>
+                <input type="number" id="tax-input" placeholder="Enter tax amount" />
+            </p>
+            <p>Tax (NZ GST): <span id="tax">RS:0.00</span></p>
             <p><b>Total Discount:<span id="totalDiscountEl"> $0.00</span></b></p>
             <p><b>TOTAL: <span id="total">$0.00</span></b></p>
             <!-- Customer ID Input -->
@@ -537,19 +541,23 @@
         saleItems.appendChild(listItem);
 
         // Calculate discounted price for the item
-        const effectivePrice = item.price - (item.discount || 0);
+        const effectivePrice = item.price;
         const itemTotal = Math.max(0, effectivePrice) * item.quantity; // Ensure price is not negative
-        subTotal += itemTotal;
-
+        subTotal += itemTotal - (item.discount || 0);
+        
         // Add discount for this item to total discount (only once, not per quantity)
         totalDiscount += item.discount || 0;
     });
 
+    // Get tax value from user input
+     // Default to 0 if no input or invalid value
+     let taxInput = document.getElementById('tax-input');
+     taxInput.addEventListener('change', updateSaleUI);
+     let taxValue = parseFloat(taxInput.value) || 0;
     // Update subtotal, tax, total, and total discount
     subTotalEl.textContent = `${subTotal.toFixed(2)}`;
-    const tax = subTotal * taxRate;
-    taxEl.textContent = `${tax.toFixed(2)}`;
-    totalEl.textContent = `${(subTotal + tax).toFixed(2)}`;
+    taxEl.textContent = `${taxValue.toFixed(2)}`; // Display user input tax value
+    totalEl.textContent = `${(subTotal + taxValue).toFixed(2)}`; // Add tax value directly to subtotal
     totalDiscountEl.textContent = `${totalDiscount.toFixed(2)}`; // Update total discount field
 }
     
