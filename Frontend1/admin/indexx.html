@@ -385,7 +385,7 @@ function printCurrentSaleAndPayment(data) {
     items.forEach(item => {
         const itemTotal = (item.price * item.quantity).toFixed(2);
         printWindow.document.write(`<tr>
-            <td>${item.product_id}</td>
+            <td>${item.product_name}</td>
             <td>RS:${item.price.toFixed(2)}</td>
             <td>${item.quantity}</td>
             <td>RS:${itemTotal}</td>
@@ -761,7 +761,8 @@ function printCurrentSaleAndPayment(data) {
                     user_id: uid, // Assuming user_id is 1 for now (this can be dynamic if needed)
                      // Add payment details here
                     items: currentSale.map(item => ({
-                        product_id: item.id, // Function to map product name to product ID
+                        product_id: item.id,
+                        product_name:item.name, // Function to map product name to product ID
                         price: item.price,
                         quantity: item.quantity
                     })),

@@ -186,19 +186,22 @@
     </header>
     <h3 style="text-align: center;">Add Supply</h3>
     <div class="container">
-        
+    
         <!-- Current Sale Section -->
         <div class="current-sale">
+            <div id="print">
             <h3>Current Sale</h3>
             <ul id="sale-items"></ul>
             <p>Sub-total: <span id="sub-total">$0.00</span></p>
+            
+            <p>Tax (NZ GST): <span id="tax">RS:0.00</span></p>
+            <p><b>Total Discount:<span id="totalDiscountEl"> $0.00</span></b></p>
+            <p><b>TOTAL: <span id="total">$0.00</span></b></p>
+        </div>
             <p>
                 <label for="tax-input">Tax:</label>
                 <input type="number" id="tax-input" placeholder="Enter tax amount" />
             </p>
-            <p>Tax (NZ GST): <span id="tax">RS:0.00</span></p>
-            <p><b>Total Discount:<span id="totalDiscountEl"> $0.00</span></b></p>
-            <p><b>TOTAL: <span id="total">$0.00</span></b></p>
             <!-- Customer ID Input -->
             <div class="vendor-id">
                 <label for="vendor-id-input">Vendor ID:</label>
@@ -220,6 +223,7 @@
             </select>
             <!-- Save Receipt Button -->
             <button id="save-receipt-button" >Save & Print Receipt</button>
+            <button id="print-receipt-button" onclick="printPage()"> Print Receipt</button>
         </div>
 
         <!-- Categories Section -->
@@ -306,11 +310,108 @@
     const originalContent = document.body.innerHTML; // Save original content
     document.body.innerHTML = container.innerHTML; // Replace body content
 
-    // Trigger print dialog
-    window.print();
+    // Wait for DOM update before triggering print
+    setTimeout(() => {
+        window.print(); // Open print dialog
+        document.body.innerHTML = originalContent; // Restore content
+        location.reload(); // Optional: Reload to restore state
+    }, 200); // Slight delay ensures rendering
+    }
+    function printCurrentSaleAndPayment(data) {
+    // Destructure the data object for easier access
+    const {
+        vendor_id,
+        purchase_date,
+        total_price,
+        payment_status,
+        user_id,
+        items,
+        payment_details,
+        discount
+    } = data;
 
-    // Restore content after the print dialog completes
-    document.body.innerHTML = originalContent;
+    // Create a new window for printing
+    const printWindow = window.open('', '', 'width=800,height=600');
+    printWindow.document.write('<html><head><title>Print Receipt</title>');
+    printWindow.document.write('<style>');
+    printWindow.document.write(`
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .section h2 {
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+        .receipt-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .receipt-table th, .receipt-table td {
+            border: 2px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .receipt-table th {
+            background-color: #f4f4f4;
+        }
+        .summary {
+            margin-top: 20px;
+        }
+        .summary p {
+            font-weight: bold;
+        }
+    `);
+    printWindow.document.write('</style></head><body>');
+
+    // Add header section
+    printWindow.document.write('<div class="section">');
+    printWindow.document.write('<h2>BR ENTERPRISES</h2>');
+    printWindow.document.write(`<p><strong>Vendor ID:</strong> ${vendor_id}</p>`);
+    printWindow.document.write(`<p><strong>Purchase Date:</strong> ${purchase_date}</p>`);
+    printWindow.document.write(`<p><strong>Payment Status:</strong> ${payment_status == 1 ? 'Paid' : 'Debt'}</p>`);
+    printWindow.document.write(`<p><strong>Processed By (User ID):</strong> ${user_id}</p>`);
+    printWindow.document.write('</div>');
+
+    // Add items table
+    printWindow.document.write('<div class="section">');
+    printWindow.document.write('<h2>Purchased Items</h2>');
+    printWindow.document.write('<table class="receipt-table">');
+    printWindow.document.write('<thead><tr><th>Product ID</th><th>Price</th><th>Quantity</th><th>Total</th></tr></thead><tbody>');
+    items.forEach(item => {
+        const itemTotal = (item.price * item.quantity).toFixed(2);
+        printWindow.document.write(`<tr>
+            <td>${item.product_name}</td>
+            <td>RS:${item.price.toFixed(2)}</td>
+            <td>${item.quantity}</td>
+            <td>RS:${itemTotal}</td>
+        </tr>`);
+    });
+    printWindow.document.write('</tbody></table>');
+    printWindow.document.write('</div>');
+
+    // Add summary section
+    printWindow.document.write('<div class="summary">');
+    printWindow.document.write(`<p><strong>Discount:</strong> RS:${discount.toFixed(2)}</p>`);
+    printWindow.document.write(`<p><strong>Total Price:</strong> RS:${total_price.toFixed(2)}</p>`);
+    printWindow.document.write(`<p><strong>Payment Details:</strong> ${payment_details}</p>`);
+    printWindow.document.write('</div>');
+
+    // Close the document
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+
+    // Trigger the print dialog
+    printWindow.print();
+
+    // Close the print window after printing
+    printWindow.onafterprint = function () {
+        printWindow.close();
+    };
 }
 //print end
         const categories = {};
@@ -647,6 +748,7 @@
                      // Add payment details here
                     items: currentSale.map(item => ({
                         product_id: item.id, // Function to map product name to product ID
+                        product_name:item.name,
                         price: item.price,
                         quantity: item.quantity
                     })),
@@ -676,7 +778,7 @@
                     console.error('Error saving receipt:', error);
                     alert('Failed to save receipt. Please try again.');
                 }
-
+                printCurrentSaleAndPayment(receiptData)
                 location.reload();
 
                 

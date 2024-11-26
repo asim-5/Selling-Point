@@ -327,7 +327,7 @@
             margin-top: 20px;
         }
         .receipt-table th, .receipt-table td {
-            border: 1px solid #ddd;
+            border: 2px solid #ddd;
             padding: 8px;
             text-align: left;
         }
@@ -345,7 +345,7 @@
 
     // Add header section
     printWindow.document.write('<div class="section">');
-    printWindow.document.write('<h2>Customer Receipt</h2>');
+    printWindow.document.write('<h2>BR ENTERPRISES</h2>');
     printWindow.document.write(`<p><strong>Customer ID:</strong> ${customer_id}</p>`);
     printWindow.document.write(`<p><strong>Purchase Date:</strong> ${purchase_date}</p>`);
     printWindow.document.write(`<p><strong>Payment Status:</strong> ${payment_status == 1 ? 'Paid' : 'Debt'}</p>`);
@@ -360,7 +360,7 @@
     items.forEach(item => {
         const itemTotal = (item.price * item.quantity).toFixed(2);
         printWindow.document.write(`<tr>
-            <td>${item.product_id}</td>
+            <td>${item.product_name}</td>
             <td>RS:${item.price.toFixed(2)}</td>
             <td>${item.quantity}</td>
             <td>RS:${itemTotal}</td>
@@ -736,6 +736,7 @@
                      // Add payment details here
                     items: currentSale.map(item => ({
                         product_id: item.id, // Function to map product name to product ID
+                        product_name:item.name,
                         price: item.price,
                         quantity: item.quantity
                     })),
