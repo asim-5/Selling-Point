@@ -625,7 +625,7 @@ function printCurrentSaleAndPayment(data) {
         const listItem = document.createElement('li');
         
         // Display item details
-        listItem.textContent = `${item.name} - $${item.price.toFixed(2)} x ${item.quantity}`;
+        listItem.textContent = `${item.name} - ${item.price.toFixed(2)} x ${item.quantity}`;
         
         // Create a discount input field
         const discountInput = document.createElement('input');
