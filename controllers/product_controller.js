@@ -429,7 +429,7 @@ const makeTransaction = async (req, res) => {
         // Begin transaction
         await connection.beginTransaction();
         const quantity = 1;
-        const product_id = 1;
+        const product_id = items[0].product_id;
 
         // Insert into the `purchases` table
         const [purchaseResult] = await connection.query(
