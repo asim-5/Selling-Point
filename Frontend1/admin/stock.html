@@ -214,6 +214,63 @@
 #vendor-list li:hover {
     background-color: #f1f1f1;
 }
+/* Modal Background (Darkens the screen behind) */
+.modal {
+    display: none; /* Hidden by default, will be shown when needed */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    z-index: 9999; /* Ensure the modal is on top */
+    justify-content: center;
+    align-items: center;
+}
+
+/* Modal Content (Actual modal box) */
+.editModal{
+    height:100%;
+}
+.modal-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 50%; /* Adjust width as necessary */
+    max-width: 600px; /* Optional: Set a max width */
+    margin: auto; /* Auto margin for horizontal centering */
+    height: 90%;
+}
+
+/* Modal Header */
+h2 {
+    text-align: center;
+}
+
+/* Modal Inputs */
+input, textarea {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+/* Modal Buttons */
+button {
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+
     </style>
 </head>
 <body>
@@ -278,14 +335,7 @@
                     <input type="text" id="vendor-id-input" placeholder="Vendor ID" readonly>
                 </div>
                 
-                <!-- Modal structure -->
-                <div id="vendor-modal" class="modal">
-                    <div class="modal-content">
-                        <span class="close-btn">&times;</span>
-                        <h2>Select Vendor</h2>
-                        <ul id="vendor-list"></ul>
-                    </div>
-                </div>
+                
 
                 <!-- Quantity -->
                 <label for="quantity">Quantity</label><br>
@@ -325,15 +375,59 @@
                     <th>Price</th>
                     <th>Venndor</th>
                     <th>Description</th>
+                    <th>Edit</th>
                 </tr>
             </thead>
             <tbody>
                 <!-- Data will be populated by JavaScript -->
             </tbody>
         </table>
+        
 
         <button class="btn-print" onclick="printPage()">Print</button>
     </div>
+    <!-- Modal Structure -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+        <h2>Edit Product</h2>
+        <form id="editForm">
+            <label for="productName">Name:</label>
+            <input type="text" id="productName" name="name" required>
+    
+            <label for="productQuantity">Quantity:</label>
+            <input type="number" id="productQuantity" name="quantity" required>
+    
+            <label for="productCategory">Category:</label>
+            <input type="text" id="productCategory" name="category" required>
+    
+            <label for="productPrice">Price:</label>
+            <input type="number" id="productPrice" name="price" required>
+    
+            <div class="vendor-id">
+                <label for="vendor-id-input">Vendor ID:</label>
+                <button type="button" id="open-edit-vendor-btn">Select Vendor</button>
+                <input type="number" id="productVendor" placeholder="Vendor ID">
+            </div>
+            
+            
+   
+    
+            <label for="productDescription">Description:</label>
+            <textarea id="productDescription" name="description"></textarea>
+    
+            <button type="button" id="confirmEdit">Confirm</button>
+            <button type="button" id="closeModal" onclick="closeEditModal()">Close</button>
+        </form>
+        </div>
+    </div>
+  <!-- Modal structure -->
+  <div id="vendor-modal" class="modal">
+    <div class="modal-content">
+        <!-- <span class="close-btn">&times;</span> -->
+        <h2>Select Vendor</h2>
+        <ul id="vendor-list"></ul>
+    </div>
+</div>
 
     <!-- JS to populate table -->
     <script>
@@ -358,6 +452,103 @@
     
             return userId;
         }
+
+        const editModal = document.getElementById('editModal');
+        const productNameInput = document.getElementById('productName');
+        const productQuantityInput = document.getElementById('productQuantity');
+        const productCategoryInput = document.getElementById('productCategory');
+        const productPriceInput = document.getElementById('productPrice');
+        const productVendorInput = document.getElementById('productVendor');
+        const productDescriptionInput = document.getElementById('productDescription');
+
+        function openEditModal(button) {
+            
+// Retrieve the product object from the data attribute
+        const product = JSON.parse(button.getAttribute('data-product'));
+            // Populate modal fields with product data
+            productNameInput.value = product.name;
+            productQuantityInput.value = product.quantity;
+            productCategoryInput.value = product.category;
+            productPriceInput.value = product.price;
+            productVendorInput.value = product.vendor_id;
+            productDescriptionInput.value = product.description;
+            console.log(productNameInput.value);
+            // Show modal
+            editModal.style.display = 'block';
+
+            // Pass the product ID to the confirm function
+            document.getElementById('confirmEdit').onclick = () => handleEdit(product.product_id);
+
+          
+
+        }
+
+        function handleEdit(productId) {
+            const updatedProduct = {
+                userId:userId,
+                product_id: productId,
+                name: productNameInput.value,
+                price: parseFloat(productPriceInput.value),
+                description: productDescriptionInput.value,
+                quantity: parseInt(productQuantityInput.value, 10),
+                category: productCategoryInput.value,
+                
+                vendor: productVendorInput.value,
+                
+            };
+
+            console.log('Updated Product:', updatedProduct);
+
+            // Pass the updated product to a function that handles the update logic
+            updateProduct(updatedProduct);
+
+            // Hide modal
+            editModal.style.display = 'none';
+            }
+
+            function updateProduct(product) {
+            // Define the API endpoint
+                const apiUrl = 'http://localhost:5000/api/v1/product/update'; // Replace with your actual API endpoint
+
+                // Make a POST request to the server
+                fetch(apiUrl, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ editedData: product }), // Pass the updated product data
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Failed to update the product');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            console.log(data.message); // Success message
+                            alert('Product updated successfully');
+                            // Optionally, refresh the UI or update the product list here
+                        } else {
+                            console.error(data.message); // Error message from the server
+                            alert('Error: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error updating product:', error);
+                        alert('');
+                    });
+                    location.reload();
+            }
+
+            function closeEditModal() {
+                // Close the modal by hiding it
+            editModal.style.display = 'none';
+            }
+
+
+
+
         
         async function fetchProducts(userId) {
             try {
@@ -369,7 +560,7 @@
                 });
 
                 const result = await response.json();
-
+                
                 if (result.success) {
                     populateTable(result.data); // Populate table with products
                 } else {
@@ -394,6 +585,10 @@
                     <td>${product.price}</td>
                     <td>${product.vendor}</td>
                     <td>${product.description}</td>
+                    
+                    <td>
+                         <button class="btn btn-print" onclick="openEditModal(this)" data-product='${JSON.stringify(product)}'>Edit</button>
+                    </td>
                 `;
                 tableBody.appendChild(row);
             });
@@ -475,16 +670,24 @@
         }
         document.addEventListener("DOMContentLoaded", () => {
     const openModalBtn = document.getElementById("open-modal-btn");
+    const openEditVendorBtn = document.getElementById("open-edit-vendor-btn");
     const modal = document.getElementById("vendor-modal");
     const closeModalBtn = document.querySelector(".close-btn");
     const vendorList = document.getElementById("vendor-list");
     const vendorIdInput = document.getElementById("vendor-id-input");
+    const editVendorInput = document.getElementById("productVendor"); // For editing form
     const userId = getUserIdFromToken(); // Replace with actual user ID
 
-    // Open modal on button click
+    // Open modal for adding vendor
     openModalBtn.addEventListener("click", async () => {
         modal.style.display = "block";
-        await fetchVendors();
+        await fetchVendors(vendorIdInput);
+    });
+
+    // Open modal for editing vendor
+    openEditVendorBtn.addEventListener("click", async () => {
+        modal.style.display = "block";
+        await fetchVendors(editVendorInput);
     });
 
     // Close modal on 'X' button click
@@ -500,22 +703,23 @@
     });
 
     // Fetch vendors and populate list
-    async function fetchVendors() {
+    async function fetchVendors(inputField) {
         try {
             const apiUrl = `http://localhost:5000/api/v1/vendor/getVendors/${userId}`;
             const response = await fetch(apiUrl);
             const data = await response.json();
             console.log(data);
+
             if (data.success) {
                 vendorList.innerHTML = ""; // Clear previous list items
-                data.data.forEach(vendor => {
+                data.data.forEach((vendor) => {
                     const listItem = document.createElement("li");
                     listItem.textContent = `${vendor.name} (ID: ${vendor.vendor_id})`;
                     listItem.dataset.vendorId = vendor.vendor_id;
 
                     // Set vendor ID on list item click
                     listItem.addEventListener("click", () => {
-                        vendorIdInput.value = listItem.dataset.vendorId;
+                        inputField.value = listItem.dataset.vendorId;
                         modal.style.display = "none"; // Close the modal
                     });
 
@@ -531,6 +735,8 @@
         }
     }
 });
+
+
     </script>
 
     <!-- Bootstrap JS -->

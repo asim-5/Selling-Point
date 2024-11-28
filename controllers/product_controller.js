@@ -107,47 +107,67 @@ const addProduct=async(req,res)=>{
 
 const updateProduct = async (req, res) => {
     try {
-        const userId = req.params.id; // Assuming userId is passed as a URL parameter
-        const { product_id, name, price, description, vendor, quantity, category, arrival_date, selling_date, cost } = req.body; // Destructuring req.body
-        console.log(product_id)
-        if (!product_id) {
-            return res.status(500).send({
+        const { editedData } = req.body;
+        if (!editedData) {
+            return res.status(400).send({
                 success: false,
-                message: 'Invalid product ID'
+                message: "All fields are required",
             });
         }
 
-        if (!userId) {
-            return res.status(500).send({
-                success: false,
-                message: 'Invalid user ID'
-            });
-        }
+        const updateQuery = `
+            UPDATE products
+            SET name = ?, price = ?, description = ?, quantity = ?, category = ?, vendor_id = ?
+            WHERE product_id = ? and user_id = ?
+        `;
 
-        // console.log("Updating product with ID:", id);
-        
-        const data = await db.query('UPDATE products SET name=?, price=?, description=?, vendor=?, quantity=?, category=?, arrival_date=?, selling_date=?, cost=? WHERE product_id=? AND user_id=?', [name, price, description, vendor, quantity, category, arrival_date, selling_date, cost, product_id, userId]);
+        const {
+            userId,
+            product_id,
+            name,
+            price,
+            description,
+            quantity,
+            category,
+            vendor,
+        } = editedData;
 
-        if (data.affectedRows === 0) {
+        // Execute the update query
+        const result = await db.query(updateQuery, [
+            name,
+            price,
+            description,
+            quantity,
+            category,
+            vendor,
+            product_id,
+            userId
+        ]);
+
+        console.log('Update result:', result); // Log the result to see affectedRows
+
+        if (result[0].affectedRows === 0) {
             return res.status(404).send({
                 success: false,
-                message: 'Error in the update query or no matching record found'
+                message: "Product not found or not updated",
             });
         }
 
+        // Log success and return the response
+        console.log('Product updated successfully:', result);
         res.status(200).send({
             success: true,
-            message: 'Product updated successfully'
+            message: "Product updated successfully",
         });
-
     } catch (error) {
-        console.error(error);
+        console.error('Error updating product:', error);
         res.status(500).send({
             success: false,
-            message: 'Error updating the product'
+            message: "Error updating the product",
         });
     }
 };
+
 
 
 const deleteProduct=async(req,res)=>{
