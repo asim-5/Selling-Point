@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="index.css">
+    <title>Dashboard</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            text-align: center;
+        }
+        .stats {
+            margin-bottom: 30px;
+        }
+        .stat-item {
+            font-size: 1.2rem;
+            margin: 10px 0;
+        }
+        .chart-container {
+            width: 80%;
+            margin: 0 auto;
+            margin-top: 30px;
+        }
+        .chart-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+        }
+        .chart-box {
+            width: 45%;
+        }
+        .year-selector {
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Dashboard</h1>
+
+    <div class="stats">
+        <div class="stat-item">Total Sales: <span id="total-sales">Loading...</span></div>
+        <div class="stat-item">Total Supply: <span id="total-supply">Loading...</span></div>
+        <div class="stat-item">Debt to Pay: <span id="debt-to-pay">Loading...</span></div>
+        <div class="stat-item">Debt to Recover: <span id="debt-to-recover">Loading...</span></div>
+    </div>
+
+    <div id="chart-section">
+        <div class="year-selector">
+            <label for="year-purchases">Select Year for total Purchases:</label>
+            <select id="year-purchases"><option value="">Loading...</option></select>
+        </div>
+        <div class="chart-wrapper" id="chart-purchases"></div>
+
+        <div class="year-selector">
+            <label for="year-supplies">Select Year for Vendor Supplies:</label>
+            <select id="year-supplies"><option value="">Loading...</option></select>
+        </div>
+        <div class="chart-wrapper" id="chart-supplies"></div>
+
+        <div class="year-selector">
+            <label for="year-unpaid-purchases">Select Year for Debt to collect:</label>
+            <select id="year-unpaid-purchases"><option value="">Loading...</option></select>
+        </div>
+        <div class="chart-wrapper" id="chart-unpaid-purchases"></div>
+
+        <div class="year-selector">
+            <label for="year-unpaid-supplies">Select Year for Unpaid Vendor Supplies:</label>
+            <select id="year-unpaid-supplies"><option value="">Loading...</option></select>
+        </div>
+        <div class="chart-wrapper" id="chart-unpaid-supplies"></div>
+    </div>
+
+    <script>
+        // Check user token and redirect if not found
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = 'login.html';
+        }
+
+        // Decode JWT to extract user ID
+        let uid;
+        function getUserIdFromToken() {
+            try {
+                const payload = token.split('.')[1];
+                const decodedPayload = JSON.parse(atob(payload));
+                uid = decodedPayload.userId;
+                return uid;
+            } catch (error) {
+                console.error('Invalid token', error);
+                return null;
+            }
+        }
+        getUserIdFromToken();
+
+        // Fetch total debt, sales, and supply data
+        async function fetchStats() {
+            try {
+                const debtEndpoint = `http://localhost:5000/api/v1/chart/totalDebt/${uid}`;
+                const totalEndpoint = `http://localhost:5000/api/v1/chart/getTotal/${uid}`;
+
+                const [debtResponse, totalResponse] = await Promise.all([
+                    fetch(debtEndpoint, { headers: { 'Content-Type': 'application/json' } }),
+                    fetch(totalEndpoint, { headers: { 'Content-Type': 'application/json' } }),
+                ]);
+
+                const debtData = await debtResponse.json();
+                const totalData = await totalResponse.json();
+
+                if (debtData.success && totalData.success) {
+                    document.getElementById("total-sales").innerText = totalData.customer;
+                    document.getElementById("total-supply").innerText = totalData.vendor;
+                    document.getElementById("debt-to-pay").innerText = debtData.vendorDebt;
+                    document.getElementById("debt-to-recover").innerText = debtData.customerDebt;
+                } else {
+                    console.error('Error fetching stats:', debtData, totalData);
+                }
+            } catch (error) {
+                console.error('Error fetching stats:', error);
+            }
+        }
+
+        // Fetch purchase and vendor data for charts
+        let allPurchases = [], allVendorSupplies = [], unpaidPurchases = [], unpaidVendorSupplies = [];
+        async function fetchChartData() {
+            try {
+                const endpoint = `http://localhost:5000/api/v1/chart/getChart/${uid}`;
+                const response = await fetch(endpoint, {
+                    headers: { 'Content-Type': 'application/json' },
+                });
+
+                if (!response.ok) throw new Error('Error fetching chart data');
+
+                const data = await response.json();
+                if (data.success) {
+                    allPurchases = data.allPurchases;
+                    allVendorSupplies = data.allVendorSupplies;
+                    unpaidPurchases = data.unpaidPurchases;
+                    unpaidVendorSupplies = data.unpaidVendorSupplies;
+                } else {
+                    throw new Error('Error in chart data response');
+                }
+            } catch (error) {
+                console.error('Error fetching chart data:', error);
+            }
+        }
+
+        // Group data by month and year
+        function groupDataByMonthAndYear(data) {
+            return data.reduce((acc, item) => {
+                const date = new Date(item.purchase_date || item.supply_date);
+                const year = date.getFullYear();
+                const month = date.toLocaleString('default', { month: 'long' });
+
+                if (!acc[year]) acc[year] = {};
+                if (!acc[year][month]) acc[year][month] = 0;
+
+                acc[year][month] += parseFloat(item.total_price);
+                return acc;
+            }, {});
+        }
+
+        // Render chart for specific data and year
+        function renderChart(title, groupedData, selectedYear, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = ''; // Clear existing charts
+
+            if (groupedData[selectedYear]) {
+                const months = Object.keys(groupedData[selectedYear]).sort((a, b) => new Date(`${a} 1, 2000`) - new Date(`${b} 1, 2000`));
+                const values = months.map(month => groupedData[selectedYear][month]);
+
+                const chartBox = document.createElement('div');
+                chartBox.className = 'chart-box';
+                const canvas = document.createElement('canvas');
+                chartBox.appendChild(canvas);
+                container.appendChild(chartBox);
+
+                new Chart(canvas, {
+                    type: 'bar',
+                    data: {
+                        labels: months,
+                        datasets: [{
+                            label: `${title} (${selectedYear})`,
+                            data: values,
+                            backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1,
+                        }],
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { position: 'top' },
+                            title: { display: true, text: `${title} for ${selectedYear}` },
+                            tooltip: {
+                                callbacks: {
+                                    label: (context) => `${context.raw.toFixed(2)}`,
+                                },
+                            },
+                        },
+                        scales: { y: { beginAtZero: true } },
+                    },
+                });
+            } else {
+                container.innerHTML = '<p>No data available for the selected year.</p>';
+            }
+        }
+
+        // Populate year dropdown and handle changes
+        function populateYearSelector(groupedData, chartTitle, containerId, selectorId) {
+            const yearSelector = document.getElementById(selectorId);
+            yearSelector.innerHTML = ''; // Clear existing options
+
+            const years = Object.keys(groupedData).sort((a, b) => a - b);
+            years.forEach(year => {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                yearSelector.appendChild(option);
+            });
+
+            yearSelector.addEventListener('change', () => {
+                const selectedYear = yearSelector.value;
+                renderChart(chartTitle, groupedData, selectedYear, containerId);
+            });
+
+            // Trigger chart rendering for the first year by default
+            if (years.length > 0) {
+                yearSelector.value = years[0];
+                renderChart(chartTitle, groupedData, years[0], containerId);
+            }
+        }
+
+        // Main function to fetch and display charts
+        async function displayCharts() {
+            await fetchChartData();
+
+            const groupedPurchases = groupDataByMonthAndYear(allPurchases);
+            const groupedVendorSupplies = groupDataByMonthAndYear(allVendorSupplies);
+            const groupedUnpaidPurchases = groupDataByMonthAndYear(unpaidPurchases);
+            const groupedUnpaidVendorSupplies = groupDataByMonthAndYear(unpaidVendorSupplies);
+
+            populateYearSelector(groupedPurchases, 'All Purchases', 'chart-purchases', 'year-purchases');
+            populateYearSelector(groupedVendorSupplies, 'Vendor Supplies', 'chart-supplies', 'year-supplies');
+            populateYearSelector(groupedUnpaidPurchases, 'Unpaid Purchases', 'chart-unpaid-purchases', 'year-unpaid-purchases');
+            populateYearSelector(groupedUnpaidVendorSupplies, 'Unpaid Vendor Supplies', 'chart-unpaid-supplies', 'year-unpaid-supplies');
+        }
+
+        // Initialize dashboard
+        (async () => {
+            await fetchStats();
+            await displayCharts();
+        })();
+    </script>
+</body>
+</html>

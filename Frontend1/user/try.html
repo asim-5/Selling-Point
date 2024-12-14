@@ -3,38 +3,262 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Set Tax Rate</title>
+  <title>Month-End Financial Summary</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f7fc;
+      padding: 20px;
+    }
+
+    .container {
+      width: 80%;
+      margin: 0 auto;
+      text-align: center;
+      background-color: #fff;
+      padding: 40px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 30px;
+      color: #333;
+    }
+
+    /* Horizontal layout for selectors */
+    .selectors {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .selectors select {
+      padding: 12px;
+      font-size: 1rem;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      background-color: #fff;
+      transition: all 0.3s ease;
+    }
+
+    .selectors select:focus {
+      outline: none;
+      border-color: #4CAF50;
+      box-shadow: 0 0 5px rgba(0, 255, 0, 0.2);
+    }
+
+    .summary-card {
+      background-color: #fff;
+      padding: 20px;
+      margin: 15px;
+      border-radius: 8px;
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+      font-size: 1.2rem;
+      text-align: left;
+    }
+
+    .summary-card span {
+      font-weight: bold;
+    }
+
+    canvas {
+      max-width: 100%;
+      margin-top: 20px;
+    }
+
+    .button-container {
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 1rem;
+      background-color: #4CAF50;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+  </style>
 </head>
 <body>
-  <label for="taxRateInput">Enter Tax Rate (e.g., 0.15):</label>
-  <input type="number" id="taxRateInput" step="0.01" placeholder="Enter tax rate" />
-  <button id="setTaxRate">Set Tax Rate</button>
+  <div class="container">
+    <h1>Financial Summary for Month-End</h1>
 
-  <p>Current Tax Rate: <span id="currentTaxRate">None</span></p>
+    <div class="selectors">
+      <select id="yearSelect" onchange="fetchFinancialData()">
+        <option value="2023">2023</option>
+        <option value="2024">2024</option>
+      </select>
+
+      <select id="monthSelect" onchange="fetchFinancialData()">
+        <option value="January">January</option>
+        <option value="February">February</option>
+        <option value="March">March</option>
+        <option value="April">April</option>
+        <option value="May">May</option>
+        <option value="June">June</option>
+        <option value="July">July</option>
+        <option value="August">August</option>
+        <option value="September">September</option>
+        <option value="October">October</option>
+        <option value="November">November</option>
+        <option value="December">December</option>
+      </select>
+
+      <select id="chartSelect" onchange="fetchFinancialData()">
+        <option value="salesProfit">Sales Profit</option>
+        <option value="debtToPay">Debt to Pay</option>
+        <option value="debtToRecover">Debt to Recover</option>
+        <option value="salesLoss">Sales Loss</option>
+      </select>
+    </div>
+
+    <div class="summary-card">
+      <p><span>Sales Profit: </span><span id="salesProfit">$0.00</span></p>
+      <p><span>Debt to Pay: </span><span id="debtToPay">$0.00</span></p>
+      <p><span>Debt to Recover: </span><span id="debtToRecover">$0.00</span></p>
+      <p><span>Best Seller: </span><span id="bestSeller">None</span></p>
+    </div>
+
+    <canvas id="financialChart"></canvas>
+
+    <div class="button-container">
+      <button onclick="displayAllCharts()">Show All Charts</button>
+    </div>
+
+    <div id="multipleCharts" class="multiple-charts"></div>
+  </div>
 
   <script>
-    let taxRate; // Variable starts as undefined
-
-    document.getElementById('setTaxRate').addEventListener('click', () => {
-      const inputField = document.getElementById('taxRateInput');
-      const newTaxRate = parseFloat(inputField.value);
-
-      if (!isNaN(newTaxRate)) {
-        taxRate = newTaxRate; // Assign the input directly to the variable
-        document.getElementById('currentTaxRate').textContent = taxRate.toFixed(2);
-        alert(`Tax rate updated to: ${taxRate}`);
-      } else {
-        alert('Please enter a valid number.');
+    const financialDataByYearAndMonth = {
+      2023: {
+        January: { salesProfit: 5000.00, debtToPay: 1500.00, debtToRecover: 1200.00, salesLoss: 100.00, bestSeller: "Product A" },
+        February: { salesProfit: 4500.00, debtToPay: 1300.00, debtToRecover: 1100.00, salesLoss: 150.00, bestSeller: "Product B" },
+        March: { salesProfit: 6000.00, debtToPay: 1600.00, debtToRecover: 1300.00, salesLoss: 120.00, bestSeller: "Product C" },
+        // Add data for other months as needed
+      },
+      2024: {
+        January: { salesProfit: 5100.00, debtToPay: 1600.00, debtToRecover: 1250.00, salesLoss: 90.00, bestSeller: "Product D" },
+        February: { salesProfit: 4700.00, debtToPay: 1400.00, debtToRecover: 1150.00, salesLoss: 110.00, bestSeller: "Product A" },
+        March: { salesProfit: 5500.00, debtToPay: 1800.00, debtToRecover: 1400.00, salesLoss: 140.00, bestSeller: "Product B" },
+        // Add data for other months as needed
       }
-    });
+    };
+
+    let financialChart = null;
+
+    function fetchFinancialData() {
+      const year = document.getElementById('yearSelect').value;
+      const month = document.getElementById('monthSelect').value;
+      const chartType = document.getElementById('chartSelect').value;
+
+      const data = financialDataByYearAndMonth[year][month];
+      
+      document.getElementById('salesProfit').innerText = `$${data.salesProfit.toFixed(2)}`;
+      document.getElementById('debtToPay').innerText = `$${data.debtToPay.toFixed(2)}`;
+      document.getElementById('debtToRecover').innerText = `$${data.debtToRecover.toFixed(2)}`;
+
+      document.getElementById('bestSeller').innerText = data.bestSeller;
+
+      let chartData = {
+        labels: [month],
+        datasets: [{
+          label: chartType.charAt(0).toUpperCase() + chartType.slice(1),
+          data: [data[chartType]],
+          backgroundColor: 'rgba(75, 192, 192, 0.2)',
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 1
+        }]
+      };
+
+      if (financialChart) {
+        financialChart.destroy();
+      }
+
+      financialChart = new Chart(document.getElementById('financialChart'), {
+        type: (chartType === 'salesProfit' || chartType === 'salesLoss') ? 'bar' : 'pie',
+        data: chartData,
+        options: {
+          responsive: true,
+          scales: {
+            x: {
+              title: { display: true, text: 'Month' }
+            },
+            y: {
+              title: { display: true, text: 'Amount ($)' },
+              beginAtZero: true
+            }
+          }
+        }
+      });
+    }
+
+    function displayAllCharts() {
+      const year = document.getElementById('yearSelect').value;
+      const month = document.getElementById('monthSelect').value;
+
+      const data = financialDataByYearAndMonth[year][month];
+      const chartTypes = ['salesProfit', 'debtToPay', 'debtToRecover', 'salesLoss'];
+      const chartContainer = document.getElementById('multipleCharts');
+      
+      chartContainer.innerHTML = ''; // Clear any previous charts
+
+      chartTypes.forEach(type => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 400;
+        canvas.height = 200;
+        chartContainer.appendChild(canvas);
+
+        let chartData = {
+          labels: [month],
+          datasets: [{
+            label: type.charAt(0).toUpperCase() + type.slice(1),
+            data: [data[type]],
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 1
+          }]
+        };
+
+        new Chart(canvas, {
+          type: (type === 'salesProfit' || type === 'salesLoss') ? 'bar' : 'pie',
+          data: chartData,
+          options: {
+            responsive: true,
+            scales: {
+              x: {
+                title: { display: true, text: 'Month' }
+              },
+              y: {
+                title: { display: true, text: 'Amount ($)' },
+                beginAtZero: true
+              }
+            }
+          }
+        });
+      });
+    }
+
+    // Initial load of data and chart
+    fetchFinancialData();
   </script>
 </body>
 </html>
-<button id="logout-btn" class="btn btn-outline-danger">Logout</button>
-<script>
-  // Logout Button Logic
-  document.getElementById('logout-btn').addEventListener('click', function () {
-    // Redirect back to the main index page
-    window.location.href = "../user/index.html";  // Adjust the path if needed
-  });
-</script>
