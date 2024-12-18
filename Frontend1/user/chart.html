@@ -11,16 +11,64 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
+            /* margin: 20px; */
             text-align: center;
         }
-        .stats {
+        /* .stats {
             margin-bottom: 30px;
         }
         .stat-item {
             font-size: 1.2rem;
             margin: 10px 0;
-        }
+        } */
+         /* General styles for the stats container */
+         h1{
+            margin-top: 20px;
+         }
+.stats {
+    display: flex;
+    flex-wrap: wrap; /* Ensures items wrap on smaller screens */
+    gap: 1rem; /* Adds spacing between boxes */
+    justify-content: center; /* Centers items horizontally */
+    padding: 1rem;
+    box-sizing: border-box;
+}
+
+/* Styling individual stat items */
+.stat-item {
+    flex: 1 1 calc(25% - 1rem); /* Makes each box take up 25% of the row, minus gap */
+    min-width: 200px; /* Ensures a minimum width for smaller screens */
+    padding: 1.5rem;
+    background-color: #f5f5f5; /* Light grey background for the boxes */
+    border: 1px solid #ddd; /* Subtle border for each box */
+    border-radius: 8px; /* Rounded corners */
+    text-align: center;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Adds a subtle shadow */
+    transition: transform 0.2s ease, box-shadow 0.2s ease; /* Smooth hover effects */
+}
+
+/* Hover effects for stat items */
+.stat-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive behavior for smaller screens */
+@media (max-width: 768px) {
+    .stat-item {
+        flex: 1 1 calc(50% - 1rem); /* Each box takes up 50% of the row on tablets */
+    }
+}
+
+@media (max-width: 480px) {
+    .stat-item {
+        flex: 1 1 100%; /* Each box takes up the full width on small screens */
+    }
+}
+/* 
         .chart-container {
             width: 80%;
             margin: 0 auto;
@@ -37,10 +85,137 @@
         }
         .year-selector {
             margin: 20px;
-        }
+        } */
+         /* General styles for the chart section */
+#chart-section {
+    display: flex;
+    flex-wrap: wrap; /* Ensures items wrap on smaller screens */
+    gap: 2rem; /* Adds spacing between items */
+    justify-content: center; /* Centers items horizontally */
+    padding: 2rem;
+    background-color: #f9f9f9; /* Light background for contrast */
+    border-radius: 8px; /* Rounded corners for the section */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow for the container */
+    box-sizing: border-box;
+}
+
+/* Container for each selection and chart pair */
+.year-selector {
+    width: 100%; /* Each selector takes up full width */
+    max-width: 600px; /* Max width to ensure charts are larger */
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin: 0 auto; /* Centers the pair in the container */
+    gap: 0.5rem;
+}
+
+/* Chart container beneath each selector */
+.chart-wrapper {
+    width: 100%; /* Matches the width of the selector above */
+    height: 400px; /* Increased height for better visibility */
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: #666;
+    font-size: 1rem;
+    margin-top: 1rem;
+}
+
+/* Style for labels */
+.year-selector label {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Style for dropdown */
+.year-selector select {
+    width: 100%;
+    padding: 0.5rem;
+    font-size: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #fff;
+    transition: border-color 0.2s ease;
+}
+
+/* Focused dropdown */
+.year-selector select:focus {
+    border-color: #007bff; /* Highlight on focus */
+    outline: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .year-selector {
+        max-width: 100%; /* Full width on smaller screens */
+    }
+
+    .chart-wrapper {
+        height: 350px; /* Slightly reduced chart height for tablets */
+    }
+}
+
+@media (max-width: 480px) {
+    #chart-section {
+        padding: 1rem;
+    }
+
+    .year-selector label {
+        font-size: 0.9rem; /* Slightly smaller label font */
+    }
+
+    .year-selector select {
+        font-size: 0.9rem; /* Smaller dropdown size */
+    }
+
+    .chart-wrapper {
+        height: 300px; /* Adjusted height for mobile screens */
+        font-size: 0.9rem;
+    }
+}
+
     </style>
 </head>
 <body>
+    <header>
+        <!-- Navbar -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container-fluid">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item"><a class="nav-link active" href="allcos.html">ALL CUSTOMER</a></li>
+                        <li class="nav-item"><a class="nav-link" href="index.html">Dashboard</a></li>
+                        <li class="nav-item"><a class="nav-link" href="vender.html">Vender</a></li>
+                        <li class="nav-item"><a class="nav-link" href="stock.html">Stock</a></li>
+                        <li class="nav-item"></li>
+                            <a class="nav-link" href="vendorAdd.html">Add Supply</a>
+                        </li>
+                        <li class="nav-item"></li>
+                            <a class="nav-link" href="chart.html">Summary</a>
+                        </li>
+                    </ul>
+                    <!-- Admin Button -->
+                    <!-- <button id="admin-btn" class="btn btn-outline-">Admin</button> -->
+                    <!-- logout button -->
+                    <!-- <button class="logout-btn" onclick="logout()">Logout</button> -->
+                </div>
+            </div>
+        </nav>
+    </header>
+
+
+
+
     <h1>Dashboard</h1>
 
     <div class="stats">
