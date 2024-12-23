@@ -57,13 +57,13 @@
 }
 
 /* Responsive behavior for smaller screens */
-@media (max-width: 768px) {
+@media (max-width: 100%) {
     .stat-item {
         flex: 1 1 calc(50% - 1rem); /* Each box takes up 50% of the row on tablets */
     }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 100%) {
     .stat-item {
         flex: 1 1 100%; /* Each box takes up the full width on small screens */
     }
@@ -88,6 +88,7 @@
         } */
          /* General styles for the chart section */
 #chart-section {
+    width: 100%;
     display: flex;
     flex-wrap: wrap; /* Ensures items wrap on smaller screens */
     gap: 2rem; /* Adds spacing between items */
@@ -110,10 +111,10 @@
     gap: 0.5rem;
 }
 
-/* Chart container beneath each selector */
+/* Adjust chart-wrapper to take full screen size */
 .chart-wrapper {
-    width: 100%; /* Matches the width of the selector above */
-    height: 400px; /* Increased height for better visibility */
+    width: 100vw; /* Full width of the viewport */
+    height: 80vh; /* Adjust height as needed (80% of viewport height) */
     background-color: #fff;
     border: 1px solid #ddd;
     border-radius: 8px;
@@ -125,6 +126,14 @@
     color: #666;
     font-size: 1rem;
     margin-top: 1rem;
+    overflow: hidden; /* Ensures content does not overflow */
+}
+
+/* Adjust the height and width of canvas/chart to match the wrapper size */
+.chart-box canvas {
+    width: 100%;  /* Full width */
+    height: 100%; /* Full height */
+    display: block; /* Ensures the canvas takes the full space */
 }
 
 /* Style for labels */
@@ -357,6 +366,8 @@
                 const canvas = document.createElement('canvas');
                 chartBox.appendChild(canvas);
                 container.appendChild(chartBox);
+                canvas.width = container.offsetWidth; 
+        canvas.height = container.offsetHeight; 
 
                 new Chart(canvas, {
                     type: 'bar',
