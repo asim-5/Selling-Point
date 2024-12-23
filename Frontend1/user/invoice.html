@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <!-- Bootstrap CSS v5.3.2 -->
+     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous" />
+    
     <title>Invoice Generator</title>
     <style>
         /* General styles */
@@ -16,6 +19,16 @@
             align-items: center;
             min-height: 100vh;
         }
+        /* Navbar should be completely outside the content container */
+nav.navbar {
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+    top: 0;
+    left: 0;
+    background-color: #fff; /* Optional: Set background color */
+    border-bottom: 1px solid #ccc; /* Optional: Border for better visibility */
+}
 
         .container {
             width: 90%;
@@ -151,14 +164,21 @@
         }
 
         .invoice-details table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 2rem;
-        }
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    border-collapse: collapse;
+    border: 1px solid #000;
+}
 
         .invoice-details table, th, td {
             border: 1px solid #000000;
         }
+        .invoice-details th, .invoice-details td {
+    padding: 12px;
+    font-size: 1rem;
+    text-align: left;
+}
 
         .invoice-details th, td {
             padding: 8px;
@@ -178,9 +198,85 @@
             border-radius: 5px;
             cursor: pointer;
         }
+
+        @media print {
+    body {
+        margin: 0;
+        padding: 0;
+    }
+    .navbar {
+        display: none; /* Hides the navbar on print */
+    }
+
+    .container {
+        width: 100%;
+        padding: 0;
+    }
+
+    .invoice-section {
+        padding: 0;
+    }
+
+    .invoice-details table {
+        width: 100%; /* Use the full width of the page */
+        max-width: none;
+        border-collapse: collapse;
+        margin: 0 auto;
+        font-size: 1.2rem; /* Increase font size for better readability */
+    }
+
+    .invoice-details th, .invoice-details td {
+        padding: 15px;
+    }
+
+    .invoice-details th {
+        background-color: #f4f4f4;
+        font-weight: bold;
+    }
+
+    /* Hide form section during printing */
+    .form-section {
+        display: none;
+    }
+}
     </style>
 </head>
 <body>
+     <!-- Navbar should be completely outside the content container -->
+     <nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top">
+        <div class="container-fluid">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="allcos.html">ALL CUSTOMER</a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="vender.html">Vendor</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="stock.html">Stock</a>
+                    </li>
+                    <li class="nav-item"></li>
+                    <a class="nav-link" href="vendorAdd.html">Add Supply</a>
+                    </li>
+                    <li class="nav-item"></li>
+                            <a class="nav-link" href="chart.html">Summary</a>
+                        </li>
+                        <li class="nav-item"></li>
+                            <a class="nav-link" href="invoice.html">INVOICE</a>
+                        </li>
+                </ul>
+                
+            </div>
+        </div>
+    </nav>
     <div class="container">
         <div class="form-section">
             <h1>Create Invoice</h1>
@@ -193,7 +289,6 @@
                     <label for="buyer-name">Buyer Name:</label>
                     <input type="text" id="buyer-name" placeholder="Enter buyer's name" required>
                 </div>
-
                 <div id="item-container">
                     <h2>Items</h2>
                     <div class="item-row">
@@ -204,23 +299,19 @@
                     </div>
                 </div>
                 <button type="button" id="add-item">+ Add Item</button>
-
                 <div class="total-container">
                     <h3>Total:</h3>
                     <span id="total-price">$0.00</span>
                 </div>
-
                 <button type="button" id="generate-invoice" class="submit-button">Generate Invoice</button>
             </form>
         </div>
-
         <div class="invoice-section hidden" id="invoice-output">
             <h1>Invoice</h1>
             <div id="invoice-details"></div>
             <button id="print-invoice" class="print-button">Print Invoice</button>
         </div>
     </div>
-
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const itemContainer = document.getElementById('item-container');
@@ -256,7 +347,7 @@
                     const price = parseFloat(row.querySelector('.item-price').value) || 0;
                     total += quantity * price;
                 });
-                totalPriceDisplay.textContent = `$${total.toFixed(2)}`;
+                totalPriceDisplay.textContent = `${total.toFixed(2)}`;
             };
 
             itemContainer.addEventListener('input', updateTotal);
@@ -267,24 +358,29 @@
                 const buyerName = document.getElementById('buyer-name').value;
                 const items = Array.from(document.querySelectorAll('.item-row')).map(row => ({
                     name: row.querySelector('.item-name').value,
-                    quantity: row.querySelector('.item-quantity').value,
-                    price: row.querySelector('.item-price').value,
+                    quantity: parseFloat(row.querySelector('.item-quantity').value) || 0,
+                    price: parseFloat(row.querySelector('.item-price').value) || 0,
                 }));
 
                 let itemsHTML = items.map(item => `
                     <tr>
                         <td>${item.name}</td>
                         <td>${item.quantity}</td>
-                        <td>${item.price}</td>
+                        <td>${item.price.toFixed(2)}</td>
                         <td>${(item.quantity * item.price).toFixed(2)}</td>
                     </tr>
                 `).join('');
 
                 invoiceDetails.innerHTML = `
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <h1>BR</h1>
+                        <p>Address: 123 Business Street, City, State, ZIP</p>
+                        <p>Phone: (123) 456-7890 | Email: support@company.com</p>
+                    </div>
                     <p><strong>Your Name:</strong> ${userName}</p>
                     <p><strong>Buyer Name:</strong> ${buyerName}</p>
                     <h2>Invoice Details</h2>
-                    <table>
+                    <table style="width:100%">
                         <thead>
                             <tr>
                                 <th>Item</th>
@@ -305,12 +401,7 @@
 
             // Print invoice
             printInvoiceButton.addEventListener('click', () => {
-                const invoiceContent = document.getElementById('invoice-output').innerHTML;
-                const originalContent = document.body.innerHTML;
-                document.body.innerHTML = invoiceContent;
                 window.print();
-                document.body.innerHTML = originalContent;
-                invoiceOutput.classList.add('hidden');
             });
         });
     </script>
