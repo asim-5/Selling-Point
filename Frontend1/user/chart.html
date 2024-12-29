@@ -113,8 +113,8 @@
 
 /* Adjust chart-wrapper to take full screen size */
 .chart-wrapper {
-    width: 100vw; /* Full width of the viewport */
-    height: 80vh; /* Adjust height as needed (80% of viewport height) */
+    width: 70vw; /* Full width of the viewport */
+    height: 70vh; /* Adjust height as needed (80% of viewport height) */
     background-color: #fff;
     border: 1px solid #ddd;
     border-radius: 8px;
@@ -382,7 +382,9 @@
                         }],
                     },
                     options: {
-                        responsive: true,
+                        responsive: true, // Keeps chart responsive
+                         maintainAspectRatio: false, 
+                       
                         plugins: {
                             legend: { position: 'top' },
                             title: { display: true, text: `${title} for ${selectedYear}` },

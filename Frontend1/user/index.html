@@ -199,9 +199,9 @@
 
             <label for="cars">Choose a SELLER:</label>
   <select id="cars" name="cars">
-    <option value="volvo">BADI</option>
-    <option value="saab">ZESHAN</option>
-    <option value="fiat">SAJJAD</option>
+    <option value="Badi">BADI</option>
+    <option value="Zeeshan">ZESHAN</option>
+    <option value="Sajjad">SAJJAD</option>
     
   </select>
             <!-- try_end -->
@@ -303,6 +303,7 @@
 
     // Wait for DOM update before triggering print
     setTimeout(() => {
+
         window.print(); // Open print dialog
         document.body.innerHTML = originalContent; // Restore content
         location.reload(); // Optional: Reload to restore state
@@ -310,6 +311,7 @@
     }
     function printCurrentSaleAndPayment(data) {
     // Destructure the data object for easier access
+    const seller = document.getElementById('cars');
     const {
         customer_id,
         purchase_date,
@@ -362,6 +364,7 @@
     // Add header section
     printWindow.document.write('<div class="section">');
     printWindow.document.write('<h2>BR ENTERPRISES</h2>');
+    printWindow.document.write(`<p><strong>Printed by:</strong> ${seller.value}</p>`);
     printWindow.document.write(`<p><strong>Customer ID:</strong> ${customer_id}</p>`);
     printWindow.document.write(`<p><strong>Purchase Date:</strong> ${purchase_date}</p>`);
     printWindow.document.write(`<p><strong>Payment Status:</strong> ${payment_status == 1 ? 'Paid' : 'Debt'}</p>`);
