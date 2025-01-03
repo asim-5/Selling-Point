@@ -198,11 +198,11 @@
             <div id="print">
             <h3>Current Sale</h3>
             <ul id="sale-items"></ul>
-            <p>Sub-total: <span id="sub-total">$0.00</span></p>
+            <p>Sub-total: <span id="sub-total">0.00</span></p>
             
             <p>Tax (NZ GST): <span id="tax">RS:0.00</span></p>
-            <p><b>Total Discount:<span id="totalDiscountEl"> $0.00</span></b></p>
-            <p><b>TOTAL: <span id="total">$0.00</span></b></p>
+            <p><b>Total Discount:<span id="totalDiscountEl"> 0.00</span></b></p>
+            <p><b>TOTAL: <span id="total">0.00</span></b></p>
         </div>
             <p>
                 <label for="tax-input">Tax:</label>
@@ -376,7 +376,9 @@
 
     // Add header section
     printWindow.document.write('<div class="section">');
-    printWindow.document.write('<h2>BR ENTERPRISES</h2>');
+    printWindow.document.write('<h1>BR ENTERPRISES</h1>');
+    printWindow.document.write('<p>Address: SHOP NO:177,MARIUM MARKET,NEAR CIVIL HOSPTAL KARACHI </p>');
+    printWindow.document.write('<p>Phone: 021-32250184 | Email: shah_badi@yahoo.com</p>')
     printWindow.document.write(`<p><strong>Vendor ID:</strong> ${vendor_id}</p>`);
     printWindow.document.write(`<p><strong>Purchase Date:</strong> ${purchase_date}</p>`);
     printWindow.document.write(`<p><strong>Payment Status:</strong> ${payment_status == 1 ? 'Paid' : 'Debt'}</p>`);

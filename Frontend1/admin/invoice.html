@@ -13,7 +13,7 @@
             font-family: 'Arial', sans-serif;
             margin: 0;
             padding: 0;
-            background: linear-gradient(to right, #6dd5fa, #ffffff);
+            background: linear-gradient(to right, #fdffff, #ffffff);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -36,7 +36,7 @@ nav.navbar {
             margin: auto;
             background: #ffffff;
             border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
             overflow: hidden;
             display: flex;
             flex-wrap: wrap;
@@ -242,41 +242,46 @@ nav.navbar {
     </style>
 </head>
 <body>
-     <!-- Navbar should be completely outside the content container -->
-     <nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top">
-        <div class="container-fluid">
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+    <header>
+        <!-- place navbar here -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container-fluid">
+              
+              <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="allcos.html">ALL CUSTOMER</a>
-                    </li>
-                    
-                    <li class="nav-item">
-                        <a class="nav-link" href="index.html">Dashboard</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="vender.html">Vendor</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="stock.html">Stock</a>
-                    </li>
-                    <li class="nav-item"></li>
-                    <a class="nav-link" href="vendorAdd.html">Add Supply</a>
-                    </li>
-                    <li class="nav-item"></li>
-                            <a class="nav-link" href="chart.html">Summary</a>
-                        </li>
-                        <li class="nav-item"></li>
-                            <a class="nav-link" href="invoice.html">INVOICE</a>
-                        </li>
+              </button>
+              <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                  <li class="nav-item">
+                    <a class="nav-link active" aria-current="page" href="allcos.html">ALL CUSTOMER</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="indexx.html">Dashboard</a>
+                  </li>
+                  <li class="nav-item"></li>
+                <a class="nav-link" href="vender.html">vender</a>
+              </li>
+              <li class="nav-item"></li>
+                <a class="nav-link" href="stock.html">stock</a>
+              </li>
+              <li class="nav-item"></li>
+                <a class="nav-link" href="vendorAdd.html">Add Supply</a>
+               </li>
+               <li class="nav-item"></li>
+               <a class="nav-link" href="chart.html">chart</a>
+              </li>
+              <li class="nav-item"></li>
+                <a class="nav-link" href="invoice.html">invoice</a>
+               </li>
+              
                 </ul>
-                
+                <button id="admin-btn" class="btn btn-outline-"></button>
+                    <!-- logout button -->
+                    <button class="logout-btn" onclick="logout()">Logout</button>
+              </div>
             </div>
-        </div>
-    </nav>
+          </nav>
+    </header>
     <div class="container">
         <div class="form-section">
             <h1>Create Invoice</h1>
